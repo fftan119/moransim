@@ -1,0 +1,1 @@
+Runs a sim of the discrete Moran process. Parameters are: original mutants B, population number P, and mutation probability M. Generates data in the form of a .csv with A=[number of A mutants][space]B=[number of B mutants], ...next  as the format. Will auto create result files in the specified directory.
