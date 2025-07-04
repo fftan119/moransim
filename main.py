@@ -9,7 +9,7 @@ def moran_process(B, P, M, gen_num):
     generation_data = []
 
     #dir setup
-    output_dir = r"D:\MITACS LLM Research Library\Paper 2 - Reversability of Moran Process\Moran Process Sim\generation data"
+    output_dir = r"[driveLetter]:\dir"
     os.makedirs(output_dir, exist_ok=True)
 
     #read base directory for existing files with same gen num, increment by 1 if it exists. adds _[run num] if none exists.
