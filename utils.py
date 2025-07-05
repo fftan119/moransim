@@ -31,8 +31,8 @@ def moran(B, P, M, max_generations=10000000):
     return generation_data
 
 def generate_initial_conditions():
-    P = random.randint(100,500)
-    B = random.randint(100, P - 1)
+    P = random.randint(1,20)
+    B = random.randint(1, P - 1)
     return B, P
 
 
