@@ -5,19 +5,17 @@ import random
 def moran_process(r, N, i0, gen_num):
     """
     Moran process with fitness-proportional reproduction and uniform death.
-    Arguments:
-        r        : fitness of mutant (A)
-        N        : total population size
-        i0       : initial number of mutants (0 < i0 < N)
-        gen_num  : generation number (used for file naming)
+    Now outputs birth-death events as [birth_index][type]:[death_index][type].
     """
     assert 0 < i0 < N, "Initial mutant count must be between 1 and N-1"
 
     i = i0
-    generation_data = [(0, i, N - i)]  # (generation, A, B)
+    population = ['A'] * i + ['B'] * (N - i)
+
+    event_data = []  # Stores tuples: (generation, birth-death string, A count, B count)
 
     # Output directory
-    output_dir = r"[drive]:\[dir]"
+    output_dir = r"[drive num]:\[dir]"
     os.makedirs(output_dir, exist_ok=True)
 
     # Handle auto-increment filename
@@ -28,31 +26,34 @@ def moran_process(r, N, i0, gen_num):
         file_path = os.path.join(output_dir, f"{base_name}_{suffix}.csv")
         suffix += 1
 
-    gen = 1
+    gen = 0
     while 0 < i < N:
-        # Reproduction
-        prob_A_birth = (r * i) / (r * i + (N - i))
-        offspring = 'A' if random.random() < prob_A_birth else 'B'
+        # Birth selection (fitness-proportional)
+        weights = [r if ind == 'A' else 1 for ind in population]
+        birth_index = random.choices(range(N), weights=weights)[0]
+        birth_type = population[birth_index]
 
-        # Death
-        prob_A_death = i / N
-        victim = 'A' if random.random() < prob_A_death else 'B'
+        # Death selection (uniform)
+        death_index = random.randrange(N)
+        death_type = population[death_index]
 
-        # Update population
-        if offspring == 'A' and victim == 'B':
-            i += 1
-        elif offspring == 'B' and victim == 'A':
-            i -= 1
-        # else: no net change
+        # Replace the individual
+        population[death_index] = birth_type
 
-        generation_data.append((gen, i, N - i))
+        # Count new A/B
+        i = population.count('A')
+        b = N - i
+
+        # Format event string
+        event = f"{birth_index}{birth_type}:{death_index}{death_type}"
+        event_data.append((gen, event, i, b))
         gen += 1
 
     # Write to CSV
     with open(file_path, mode='w', newline='') as file:
         writer = csv.writer(file)
-        writer.writerow(['Generation', 'A', 'B'])
-        writer.writerows(generation_data)
+        writer.writerow(['Generation', 'Event', 'A', 'B'])
+        writer.writerows(event_data)
 
     print(f"Simulation complete. Saved to: {file_path}")
 
