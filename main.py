@@ -2,50 +2,61 @@ import csv
 import os
 import random
 
-def moran_process(B, P, M, gen_num):
-    #definitions
-    A = P - B
-    population = ['A'] * A + ['B'] * B
-    generation_data = []
+def moran_process(r, N, i0, gen_num):
+    """
+    Moran process with fitness-proportional reproduction and uniform death.
+    Arguments:
+        r        : fitness of mutant (A)
+        N        : total population size
+        i0       : initial number of mutants (0 < i0 < N)
+        gen_num  : generation number (used for file naming)
+    """
+    assert 0 < i0 < N, "Initial mutant count must be between 1 and N-1"
 
-    #dir setup
-    output_dir = r"[driveLetter]:\dir"
+    i = i0
+    generation_data = [(0, i, N - i)]  # (generation, A, B)
+
+    # Output directory
+    output_dir = r"[drive]:\[dir]"
     os.makedirs(output_dir, exist_ok=True)
 
-    #read base directory for existing files with same gen num, increment by 1 if it exists. adds _[run num] if none exists.
+    # Handle auto-increment filename
     base_name = f"Generation {gen_num}"
     file_path = os.path.join(output_dir, f"{base_name}.csv")
-    i = 1
+    suffix = 1
     while os.path.exists(file_path):
-        file_path = os.path.join(output_dir, f"{base_name}_{i}.csv")
-        i += 1
+        file_path = os.path.join(output_dir, f"{base_name}_{suffix}.csv")
+        suffix += 1
 
-    #record initial state
-    generation_data.append(f"A={population.count('A')} B={population.count('B')}")
+    gen = 1
+    while 0 < i < N:
+        # Reproduction
+        prob_A_birth = (r * i) / (r * i + (N - i))
+        offspring = 'A' if random.random() < prob_A_birth else 'B'
 
-    #run Moran process until fixation (all mutant A, or B)
-    while 0 < population.count('B') < P:
-        #1. select a reproducer
-        reproducer = random.choice(population)
-        #2. apply mutation
-        if random.random() < M:
-            offspring = 'B' if reproducer == 'A' else 'A'
-        else:
-            offspring = reproducer
-        # 3. select someone to be replaced
-        replaced_index = random.randint(0, P - 1)
-        population[replaced_index] = offspring
-        # 4. record new generation
-        generation_data.append(f"A={population.count('A')} B={population.count('B')}")
+        # Death
+        prob_A_death = i / N
+        victim = 'A' if random.random() < prob_A_death else 'B'
 
-    #write to csv
+        # Update population
+        if offspring == 'A' and victim == 'B':
+            i += 1
+        elif offspring == 'B' and victim == 'A':
+            i -= 1
+        # else: no net change
+
+        generation_data.append((gen, i, N - i))
+        gen += 1
+
+    # Write to CSV
     with open(file_path, mode='w', newline='') as file:
         writer = csv.writer(file)
-        for line in generation_data:
-            writer.writerow([line])
+        writer.writerow(['Generation', 'A', 'B'])
+        writer.writerows(generation_data)
 
     print(f"Simulation complete. Saved to: {file_path}")
 
-#run params
+
+# Example usage
 if __name__ == "__main__":
-    moran_process(B=3, P=20, M=0.01, gen_num=1)
+    moran_process(r=1.2, N=20, i0=3, gen_num=1)
