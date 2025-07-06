@@ -1,6 +1,8 @@
 import csv
 import os
 import random
+import shutil
+from send import send  # Import the send function from send.py
 
 def moran_process(r, N, i0, gen_num):
     """
@@ -22,10 +24,7 @@ def moran_process(r, N, i0, gen_num):
     # Handle auto-increment filename
     base_name = f"Generation {gen_num}"
     file_path = os.path.join(output_dir, f"{base_name}.csv")
-    suffix = 1
-    while os.path.exists(file_path):
-        file_path = os.path.join(output_dir, f"{base_name}_{suffix}.csv")
-        suffix += 1
+    # No suffix needed; always overwrite the file if it exists
 
     while 0 < i < N:
         # Fitness-proportional birth
@@ -56,6 +55,12 @@ def moran_process(r, N, i0, gen_num):
 
 # Example usage
 if __name__ == "__main__":
-    for i in range(1, 6):
-        moran_process(r=1.2, N=20, i0=3, gen_num=i)
-    
+    for j in range(1, 11):
+        r = random.randint(10, 15)/10  # Random relative fitness between 1.0 and 1.5
+        N = random.randint(15, 25)
+        i0 = random.randint(1, N-1)  # Random initial mutant count
+        for i in range(1, 6):
+            moran_process(r=r, N=N, i0=i0, gen_num=i)
+        send()
+        shutil.rmtree("moran_process_output", ignore_errors=True)
+

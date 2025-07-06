@@ -41,6 +41,7 @@ def append_generation_csvs(output_dir='moran_process_output', output_file='all_g
 
     header_written = False
     output_path = os.path.join(output_dir, output_file)
+    # Always overwrite the old all_generations.csv file
     with open(output_path, 'w', newline='', encoding='utf-8') as outfile:
         writer = None
         for csv_file in csv_files:
