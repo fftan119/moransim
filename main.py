@@ -16,7 +16,7 @@ def moran_process(r, N, i0, gen_num):
     event_data = []  # List of [event_string]
 
     # Output directory
-    output_dir = r"[drive letter]:\[dir]"
+    output_dir = "moran_process_output"
     os.makedirs(output_dir, exist_ok=True)
 
     # Handle auto-increment filename
@@ -56,4 +56,6 @@ def moran_process(r, N, i0, gen_num):
 
 # Example usage
 if __name__ == "__main__":
-    moran_process(r=1.2, N=20, i0=3, gen_num=1)
+    for i in range(1, 6):
+        moran_process(r=1.2, N=20, i0=3, gen_num=i)
+    
