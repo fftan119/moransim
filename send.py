@@ -4,7 +4,7 @@ import dotenv
 import os
 import json
 
-def send():
+def send(r, N, i0):
     dotenv.load_dotenv()
     api_key = os.getenv("OPENAI_API_KEY")
     print(api_key)
@@ -25,7 +25,7 @@ def send():
     print(batch_job)
     # Write the batch job id to a file
     with open(f"batch_job_ids_{model_name}.jsonl", "a", encoding="utf-8") as f:
-        f.write(json.dumps({"batch_job_id": batch_job.id}) + "\n")
+        f.write(json.dumps({"batch_job_id": batch_job.id, "r": r, "N": N, "i0": i0}) + "\n")
 # def main():
 #     send()
 

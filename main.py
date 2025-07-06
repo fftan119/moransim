@@ -61,6 +61,6 @@ if __name__ == "__main__":
         i0 = random.randint(1, N-1)  # Random initial mutant count
         for i in range(1, 6):
             moran_process(r=r, N=N, i0=i0, gen_num=i)
-        send()
+        send(r, N, i0)
         shutil.rmtree("moran_process_output", ignore_errors=True)
 
