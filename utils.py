@@ -60,7 +60,7 @@ def append_generation_csvs(output_dir='moran_process_output', output_file='all_g
 
 def get_system_prompt():
     """
-    Returns the system prompt for the physics multiple choice question answering task.
+    Returns the system prompt for Moran process parameter inference.
     """
     return system_prompt.strip()
 
