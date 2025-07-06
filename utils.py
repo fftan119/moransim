@@ -15,7 +15,7 @@ Where the first number is the index of the individual that was born, followed by
 Neutral generations are where the number of A and B individuals remains the same, while mutant generations are where the number of A/B individuals increases.
 You will be given a collection of simulations, and you must determine the parameters (i0, r, N) that best fit the data.
 '''
-system_prompt = '''
+system_prompt = r'''
 The .csv file is a discrete history of mutant A and individuals B within a population of 20 following the Moran process. The format per evolution step is [index of reproducing individual][individual type]:[index of dying individual][individual type]. The .csv file is a entire evolution history with the very last state being an absorbing state. Recover the total number of intial mutants, and relative fitness. Give me exact values.
 You will be given a collection of simulations, and you must determine the parameters (i0, r, N) that best fit the data.
 i0 is a positive integer representing the initial number of mutants in the population.
