@@ -56,6 +56,6 @@ def moran_process(r, N, i0, gen_num):
 
 # Example usage
 if __name__ == "__main__":
-    for i in range(1, 6):
+    for i in range(1, 6): # determines how many times the program is run, in this case 5.
         moran_process(r=1.2, N=20, i0=3, gen_num=i)
     
