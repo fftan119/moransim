@@ -16,11 +16,13 @@ Neutral generations are where the number of A and B individuals remains the same
 You will be given a collection of simulations, and you must determine the parameters (i0, r, N) that best fit the data.
 '''
 system_prompt = r'''
-The .csv file is a discrete history of mutant A and individuals B within a population of 20 following the Moran process. The format per evolution step is [index of reproducing individual][individual type]:[index of dying individual][individual type]. The .csv file is a entire evolution history with the very last state being an absorbing state. Recover the total number of intial mutants, and relative fitness. Give me exact values.
-You will be given a collection of simulations, and you must determine the parameters (i0, r, N) that best fit the data.
+The .csv file is a discrete history of mutant A and individuals B within a population of 20 following the Moran process. 
+The format per evolution step is [index of reproducing individual][individual type]:[index of dying individual][individual type]. 
+The .csv file is a entire evolution history with the very last state being an absorbing state. 
+Recover the total number of intial mutants, and relative fitness. Give me exact values.
+You will be given a collection of 100 simulations, and you must determine the parameters (i0, r) that best fit the data.
 i0 is a positive integer representing the initial number of mutants in the population.
 r is a float representing the relative fitness of the mutants compared to the wild type. Round to the nearest tenth.
-N is a positive integer representing the total population size.
 
 Please respond in JSON format with the following structure:
 {
