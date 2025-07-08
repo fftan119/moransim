@@ -4,32 +4,38 @@ import csv
 import datetime
 import time
 
-system_prompt = '''
-Your goal is to figure out the correct parameters i0, r, N for the Moran process simulation based on the simulation data provided.
-Iterations (generations) per simulation are formatted as follows:
-1A:2B
-3A:4A
-5B:6B
-Where the first number is the index of the individual that was born, followed by its type (A or B), then a colon, and finally the index of the individual that died, followed by its type.
 
-Neutral generations are where the number of A and B individuals remains the same, while mutant generations are where the number of A/B individuals increases.
-You will be given a collection of simulations, and you must determine the parameters (i0, r, N) that best fit the data.
-'''
 system_prompt = r'''
-The .csv file is a discrete history of mutant A and individuals B within a population of 20 following the Moran process. 
-The format per evolution step is [index of reproducing individual][individual type]:[index of dying individual][individual type]. 
-The .csv file is a entire evolution history with the very last state being an absorbing state. 
-Recover the total number of intial mutants, and relative fitness. Give me exact values.
-You will be given a collection of 100 simulations, and you must determine the parameters (i0, r) that best fit the data.
-i0 is a positive integer representing the initial number of mutants in the population.
-r is a float representing the relative fitness of the mutants compared to the wild type. Round to the nearest tenth.
+The .csv file is a discrete history of mutant A and individuals B within a population of 20 following the Moran process. The format per evolution step is [index of reproducing individual][individual type]:[index of dying individual][individual type]. The .csv file is a entire evolution history with the very last state being an absorbing state. Recover the total number of intial mutants, and relative fitness. Give me exact values.
 
-Please respond in JSON format with the following structure:
-{
-  "i0": <initial_mutants>,
-  "r": <relative_fitness>,
-  "N": <population_size>
-}
+Moran Process
+
+
+The \textit{Moran process} is a foundational stochastic model that describes the evolution of a finite, well-mixed population undergoing reproduction and death in discrete time steps \cite{moran1958random,Nowak2006}. The population size remains constant at (N), consisting of two competing types: mutants ((A)) with relative fitness (r), and residents ((B)) with fitness (1). At any given generation, let (i \in {0, 1, \ldots, N}) represent the number of mutants in the population.
+
+Each generational update proceeds as follows:
+\begin{itemize}
+    \item \textbf{Reproduction:} One individual is chosen to reproduce, with probability proportional to fitness:
+    [
+        \Pr(\text{birth of }A) = \frac{r i}{r i + (N - i)}, \qquad
+        \Pr(\text{birth of }B) = \frac{N - i}{r i + (N - i)}.
+    ]
+
+    \item \textbf{Death:} Independently, one individual is selected uniformly at random to be removed:
+    [
+        \Pr(\text{death of }A) = \frac{i}{N}, \qquad
+        \Pr(\text{death of }B) = \frac{N - i}{N}.
+    ]
+\end{itemize}
+
+The combination of these two events defines a Markov chain with the following transition probabilities:
+
+    \Pr(i \rightarrow i + 1) &= \frac{r i}{r i + (N - i)} \cdot \frac{N - i}{N}, \
+    \Pr(i \rightarrow i - 1) &= \frac{N - i}{r i + (N - i)} \cdot \frac{i}{N}, \
+    \Pr(i \rightarrow i) &= 1 - \Pr(i \rightarrow i+1) - \Pr(i \rightarrow i-1).
+
+
+The process has two absorbing states: (i = 0) (extinction of mutants) and (i = N) (fixation of mutants).
 '''
 def append_generation_csvs(output_dir='moran_process_output', output_file='all_generations.csv'):
     csv_files = []
