@@ -1,0 +1,10 @@
+{
+  "run_id": "exp001_run02",
+  "r": 1.1,
+  "N": 24,
+  "i0": 5,
+  "steps": 270,
+  "absorbing_state": 0,
+  "seed": 531969374,
+  "csv_path": "data/raw/exp001_run02.csv"
+}

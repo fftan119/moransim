@@ -1,0 +1,5 @@
+experiment_id,run_id,crop_name,trace_csv,true_r,true_N,true_i0,seed,steps,absorbing_state
+exp001,exp001_run01,full,data/cropped/exp001_run01__full.csv,1.0,15,2,387682509,11,0
+exp001,exp001_run01,prefix10,data/cropped/exp001_run01__prefix10.csv,1.0,15,2,387682509,11,0
+exp001,exp001_run01,suffix10,data/cropped/exp001_run01__suffix10.csv,1.0,15,2,387682509,11,0
+exp001,exp001_run01,stride3,data/cropped/exp001_run01__stride3.csv,1.0,15,2,387682509,11,0

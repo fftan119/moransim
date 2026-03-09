@@ -1,6 +1,0 @@
-dominance_result.txt
-.env
-.venv
-__pycache__/
-*.jsonl
-moran_process_output/
