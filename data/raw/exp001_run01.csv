@@ -1,12 +1,2 @@
 run_id,step,birth_index,birth_type,death_index,death_type,event,mutants_before,mutants_after,N,true_r,true_i0
-exp001_run01,0,1,A,13,B,1A:13B,2,3,15,1.0,2
-exp001_run01,1,4,B,11,B,4B:11B,3,3,15,1.0,2
-exp001_run01,2,2,B,0,A,2B:0A,3,2,15,1.0,2
-exp001_run01,3,13,A,1,A,13A:1A,2,2,15,1.0,2
-exp001_run01,4,12,B,14,B,12B:14B,2,2,15,1.0,2
-exp001_run01,5,8,B,8,B,8B:8B,2,2,15,1.0,2
-exp001_run01,6,11,B,11,B,11B:11B,2,2,15,1.0,2
-exp001_run01,7,3,B,13,A,3B:13A,2,1,15,1.0,2
-exp001_run01,8,7,B,13,B,7B:13B,1,1,15,1.0,2
-exp001_run01,9,3,B,7,B,3B:7B,1,1,15,1.0,2
-exp001_run01,10,13,B,1,A,13B:1A,1,0,15,1.0,2
+exp001_run01,0,22,B,0,A,22B:0A,1,0,25,1.0,1
