@@ -7,7 +7,9 @@ from pathlib import Path
 
 def summarize_scores(scored_csv: str | Path) -> str:
     scored_csv = Path(scored_csv)
-    by_crop: dict[str, dict[str, float]] = defaultdict(lambda: {"count": 0, "exact_both": 0, "sum_abs_error_r": 0.0, "sum_abs_error_i0": 0.0})
+    by_crop: dict[str, dict[str, float]] = defaultdict(
+        lambda: {"count": 0.0, "exact_both": 0.0, "sum_abs_error_r": 0.0, "sum_abs_error_i0": 0.0}
+    )
 
     with scored_csv.open("r", newline="", encoding="utf-8") as handle:
         for row in csv.DictReader(handle):

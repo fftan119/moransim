@@ -2,53 +2,49 @@ from __future__ import annotations
 
 import csv
 from pathlib import Path
-from typing import Literal
-
-CropMode = Literal["full", "prefix", "suffix", "window", "stride"]
+from typing import Iterable
 
 
-def crop_trace(
-    input_csv: str | Path,
-    output_csv: str | Path,
-    mode: CropMode = "full",
-    k: int | None = None,
-    start: int | None = None,
-    stop: int | None = None,
-    stride: int | None = None,
-) -> Path:
-    input_csv = Path(input_csv)
-    output_csv = Path(output_csv)
-    output_csv.parent.mkdir(parents=True, exist_ok=True)
+def _read_rows(csv_path: str | Path) -> list[dict[str, str]]:
+    with Path(csv_path).open("r", newline="", encoding="utf-8") as handle:
+        return list(csv.DictReader(handle))
 
-    with input_csv.open("r", newline="", encoding="utf-8") as handle:
-        reader = csv.DictReader(handle)
-        rows = list(reader)
-        fieldnames = reader.fieldnames or []
 
-    if mode == "full":
-        cropped = rows
-    elif mode == "prefix":
-        if k is None:
-            raise ValueError("k is required for prefix crop")
-        cropped = rows[:k]
-    elif mode == "suffix":
-        if k is None:
-            raise ValueError("k is required for suffix crop")
-        cropped = rows[-k:]
-    elif mode == "window":
-        if start is None or stop is None:
-            raise ValueError("start and stop are required for window crop")
-        cropped = rows[start:stop]
-    elif mode == "stride":
-        if stride is None or stride <= 0:
-            raise ValueError("positive stride is required for stride crop")
-        cropped = rows[::stride]
-    else:
-        raise ValueError(f"Unsupported crop mode: {mode}")
-
-    with output_csv.open("w", newline="", encoding="utf-8") as handle:
+def _write_rows(rows: Iterable[dict[str, str]], out_path: str | Path) -> Path:
+    out_path = Path(out_path)
+    rows = list(rows)
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    fieldnames = list(rows[0].keys()) if rows else [
+        "step",
+        "event",
+        "birth_index",
+        "birth_type",
+        "death_index",
+        "death_type",
+        "mutants_before",
+        "mutants_after",
+        "N",
+    ]
+    with out_path.open("w", newline="", encoding="utf-8") as handle:
         writer = csv.DictWriter(handle, fieldnames=fieldnames)
         writer.writeheader()
-        writer.writerows(cropped)
+        writer.writerows(rows)
+    return out_path
 
-    return output_csv
+
+def make_crop_variants(raw_trace_csv: str | Path, output_dir: str | Path, *, prefix_k: int = 10, suffix_k: int = 10, stride: int = 3) -> dict[str, Path]:
+    rows = _read_rows(raw_trace_csv)
+    output_dir = Path(output_dir)
+    stem = Path(raw_trace_csv).stem
+
+    variants = {
+        "full": rows,
+        "prefix10": rows[:prefix_k],
+        "suffix10": rows[-suffix_k:] if rows else [],
+        "stride3": rows[::stride] if stride > 0 else rows,
+    }
+
+    out: dict[str, Path] = {}
+    for crop_name, crop_rows in variants.items():
+        out[crop_name] = _write_rows(crop_rows, output_dir / f"{stem}__{crop_name}.csv")
+    return out

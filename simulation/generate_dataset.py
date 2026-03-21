@@ -1,90 +1,67 @@
 from __future__ import annotations
 
 import csv
-import json
 import random
 from pathlib import Path
-from typing import Any
+from .crop import make_crop_variants
+from .io import write_run_metadata_json, write_run_trace_csv
+from .moran import simulate_moran_run
 
-from .crop import crop_trace
-from .moran import MoranParams, run_moran_process
+
+def _sample_r(rng: random.Random) -> float:
+    # Rounded grid keeps scoring sensible while still varying the parameter.
+    return round(rng.uniform(0.6, 1.8), 2)
 
 
 def generate_dataset(
+    *,
     num_experiments: int,
-    replicates_per_experiment: int,
-    raw_dir: str | Path,
-    cropped_dir: str | Path,
-    summary_csv: str | Path,
-    seed: int | None = None,
-    r_min: float = 1.0,
-    r_max: float = 1.5,
-    N_min: int = 15,
-    N_max: int = 25,
+    replicates: int,
+    seed: int | None,
+    base_dir: str | Path,
 ) -> Path:
-    rng = random.Random(seed)
-    raw_dir = Path(raw_dir)
-    cropped_dir = Path(cropped_dir)
+    base_dir = Path(base_dir)
+    raw_dir = base_dir / "data" / "raw"
+    cropped_dir = base_dir / "data" / "cropped"
+    results_dir = base_dir / "data" / "results"
     raw_dir.mkdir(parents=True, exist_ok=True)
     cropped_dir.mkdir(parents=True, exist_ok=True)
-    summary_csv = Path(summary_csv)
-    summary_csv.parent.mkdir(parents=True, exist_ok=True)
+    results_dir.mkdir(parents=True, exist_ok=True)
 
-    summary_rows: list[dict[str, Any]] = []
+    rng = random.Random(seed)
+    summary_rows: list[dict[str, str | int | float]] = []
 
     for exp_idx in range(1, num_experiments + 1):
-        N = rng.randint(N_min, N_max)
-        params = MoranParams(
-            r=round(rng.randint(int(r_min * 10), int(r_max * 10)) / 10.0, 1),
-            N=N,
-            i0=rng.randint(1, N - 1),
-        )
-
-        for rep_idx in range(1, replicates_per_experiment + 1):
+        true_r = _sample_r(rng)
+        true_N = rng.randint(15, 25)
+        true_i0 = rng.randint(1, true_N - 1)
+        for rep_idx in range(1, replicates + 1):
             run_id = f"exp{exp_idx:03d}_run{rep_idx:02d}"
-            run_seed = rng.randint(0, 10**9)
-            metadata = run_moran_process(params, run_id=run_id, output_dir=raw_dir, seed=run_seed)
-            raw_csv = Path(metadata["csv_path"])
+            run = simulate_moran_run(r=true_r, N=true_N, i0=true_i0, run_id=run_id, rng=rng)
+            raw_trace_path = write_run_trace_csv(run, raw_dir / f"{run_id}.csv")
+            meta_path = write_run_metadata_json(run, raw_dir / f"{run_id}.meta.json")
+            crop_paths = make_crop_variants(raw_trace_path, cropped_dir)
 
-            full_csv = cropped_dir / f"{run_id}__full.csv"
-            prefix_csv = cropped_dir / f"{run_id}__prefix10.csv"
-            suffix_csv = cropped_dir / f"{run_id}__suffix10.csv"
-            stride_csv = cropped_dir / f"{run_id}__stride3.csv"
-
-            crop_trace(raw_csv, full_csv, mode="full")
-            crop_trace(raw_csv, prefix_csv, mode="prefix", k=10)
-            crop_trace(raw_csv, suffix_csv, mode="suffix", k=10)
-            crop_trace(raw_csv, stride_csv, mode="stride", stride=3)
-
-            for crop_name, crop_path in {
-                "full": full_csv,
-                "prefix10": prefix_csv,
-                "suffix10": suffix_csv,
-                "stride3": stride_csv,
-            }.items():
+            for crop_name, crop_path in crop_paths.items():
                 summary_rows.append(
                     {
-                        "experiment_id": f"exp{exp_idx:03d}",
                         "run_id": run_id,
                         "crop_name": crop_name,
                         "trace_csv": str(crop_path),
-                        "true_r": params.r,
-                        "true_N": params.N,
-                        "true_i0": params.i0,
-                        "seed": run_seed,
-                        "steps": metadata["steps"],
-                        "absorbing_state": metadata["absorbing_state"],
+                        "meta_json": str(meta_path),
+                        "true_r": true_r,
+                        "true_N": true_N,
+                        "true_i0": true_i0,
+                        "num_events_full": len(run.steps),
                     }
                 )
 
-    with summary_csv.open("w", newline="", encoding="utf-8") as handle:
-        writer = csv.DictWriter(handle, fieldnames=list(summary_rows[0].keys()) if summary_rows else [
-            "experiment_id", "run_id", "crop_name", "trace_csv", "true_r", "true_N", "true_i0",
-            "seed", "steps", "absorbing_state"
-        ])
+    summary_path = results_dir / "dataset_summary.csv"
+    with summary_path.open("w", newline="", encoding="utf-8") as handle:
+        writer = csv.DictWriter(
+            handle,
+            fieldnames=["run_id", "crop_name", "trace_csv", "meta_json", "true_r", "true_N", "true_i0", "num_events_full"],
+        )
         writer.writeheader()
         writer.writerows(summary_rows)
-
-    manifest = summary_csv.with_suffix(".json")
-    manifest.write_text(json.dumps({"rows": len(summary_rows), "summary_csv": str(summary_csv)}, indent=2), encoding="utf-8")
-    return summary_csv
+    return summary_path

@@ -21,7 +21,7 @@ def read_batch_ids(file_path: str | Path) -> list[dict]:
     return rows
 
 
-def fetch_completed_batches(batch_ids_jsonl: str | Path, output_dir: str | Path) -> list[Path]:
+def fetch_completed_batches(batch_ids_jsonl: str | Path, output_dir: str | Path, *, verbose: bool = True) -> list[Path]:
     dotenv.load_dotenv()
     api_key = os.getenv("OPENAI_API_KEY")
     if not api_key:
@@ -35,12 +35,18 @@ def fetch_completed_batches(batch_ids_jsonl: str | Path, output_dir: str | Path)
     for row in read_batch_ids(batch_ids_jsonl):
         batch_id = row["batch_job_id"]
         batch = client.batches.retrieve(batch_id)
-        if batch.status == "completed" and batch.output_file_id:
+        if verbose:
+            print(
+                f"batch_id={batch_id} status={batch.status} "
+                f"output_file_id={getattr(batch, 'output_file_id', None)} "
+                f"error_file_id={getattr(batch, 'error_file_id', None)}"
+            )
+        if batch.status == "completed" and getattr(batch, "output_file_id", None):
             content = client.files.content(batch.output_file_id)
             out_path = output_dir / f"{batch_id}_output.jsonl"
             out_path.write_bytes(content.content)
             outputs.append(out_path)
-        elif batch.status == "failed" and batch.error_file_id:
+        elif batch.status in {"failed", "expired", "cancelled"} and getattr(batch, "error_file_id", None):
             err = client.files.content(batch.error_file_id)
             (output_dir / f"{batch_id}_errors.jsonl").write_bytes(err.content)
     return outputs

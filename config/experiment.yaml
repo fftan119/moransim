@@ -1,8 +1,0 @@
-num_experiments: 10
-replicates_per_experiment: 5
-seed: 42
-r_min: 1.0
-r_max: 1.5
-N_min: 15
-N_max: 25
-model_name: gpt-4o-mini

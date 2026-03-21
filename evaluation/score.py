@@ -47,12 +47,12 @@ def score_predictions(summary_csv: str | Path, parsed_csv: str | Path, scored_cs
                 }
             )
 
+    fieldnames = [
+        "custom_id", "estimated_i0", "estimated_r", "confidence", "reasoning_summary", "raw_content",
+        "true_i0", "true_r", "abs_error_i0", "abs_error_r", "exact_i0", "exact_r", "exact_both",
+    ]
     with scored_csv.open("w", newline="", encoding="utf-8") as handle:
-        writer = csv.DictWriter(handle, fieldnames=list(scored_rows[0].keys()) if scored_rows else [
-            "custom_id", "estimated_i0", "estimated_r", "confidence", "reasoning_summary", "raw_content",
-            "true_i0", "true_r", "abs_error_i0", "abs_error_r", "exact_i0", "exact_r", "exact_both"
-        ])
+        writer = csv.DictWriter(handle, fieldnames=fieldnames)
         writer.writeheader()
         writer.writerows(scored_rows)
-
     return scored_csv

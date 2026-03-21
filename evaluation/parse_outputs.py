@@ -43,10 +43,16 @@ def parse_batch_outputs(output_jsonl: str | Path, parsed_csv: str | Path) -> Pat
                 }
             )
 
+    fieldnames = [
+        "custom_id",
+        "estimated_i0",
+        "estimated_r",
+        "confidence",
+        "reasoning_summary",
+        "raw_content",
+    ]
     with parsed_csv.open("w", newline="", encoding="utf-8") as handle:
-        writer = csv.DictWriter(handle, fieldnames=list(rows[0].keys()) if rows else [
-            "custom_id", "estimated_i0", "estimated_r", "confidence", "reasoning_summary", "raw_content"
-        ])
+        writer = csv.DictWriter(handle, fieldnames=fieldnames)
         writer.writeheader()
         writer.writerows(rows)
     return parsed_csv

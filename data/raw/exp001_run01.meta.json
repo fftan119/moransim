@@ -1,10 +1,8 @@
 {
   "run_id": "exp001_run01",
-  "r": 1.0,
-  "N": 25,
-  "i0": 1,
-  "steps": 1,
-  "absorbing_state": 0,
-  "seed": 796233790,
-  "csv_path": "C:\\Users\\Frank Tan\\moransim\\data\\raw\\exp001_run01.csv"
+  "true_r": 1.37,
+  "true_N": 15,
+  "true_i0": 12,
+  "absorbed_type": "A",
+  "num_events": 24
 }

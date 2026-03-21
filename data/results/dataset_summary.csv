@@ -1,5 +1,5 @@
-experiment_id,run_id,crop_name,trace_csv,true_r,true_N,true_i0,seed,steps,absorbing_state
-exp001,exp001_run01,full,C:\Users\Frank Tan\moransim\data\cropped\exp001_run01__full.csv,1.0,25,1,796233790,1,0
-exp001,exp001_run01,prefix10,C:\Users\Frank Tan\moransim\data\cropped\exp001_run01__prefix10.csv,1.0,25,1,796233790,1,0
-exp001,exp001_run01,suffix10,C:\Users\Frank Tan\moransim\data\cropped\exp001_run01__suffix10.csv,1.0,25,1,796233790,1,0
-exp001,exp001_run01,stride3,C:\Users\Frank Tan\moransim\data\cropped\exp001_run01__stride3.csv,1.0,25,1,796233790,1,0
+run_id,crop_name,trace_csv,meta_json,true_r,true_N,true_i0,num_events_full
+exp001_run01,full,/mnt/data/moran_clean/data/cropped/exp001_run01__full.csv,/mnt/data/moran_clean/data/raw/exp001_run01.meta.json,1.37,15,12,24
+exp001_run01,prefix10,/mnt/data/moran_clean/data/cropped/exp001_run01__prefix10.csv,/mnt/data/moran_clean/data/raw/exp001_run01.meta.json,1.37,15,12,24
+exp001_run01,suffix10,/mnt/data/moran_clean/data/cropped/exp001_run01__suffix10.csv,/mnt/data/moran_clean/data/raw/exp001_run01.meta.json,1.37,15,12,24
+exp001_run01,stride3,/mnt/data/moran_clean/data/cropped/exp001_run01__stride3.csv,/mnt/data/moran_clean/data/raw/exp001_run01.meta.json,1.37,15,12,24

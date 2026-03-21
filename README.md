@@ -1,36 +1,20 @@
-# Moran Process Reverse-Inference Project
+# Moran reverse-inference pipeline
 
-This version separates the codebase into two stages:
+This project does four things cleanly:
 
-- `simulation/`: generate Moran-process traces and cropped variants.
-- `evaluation/`: send traces to the OpenAI API, retrieve outputs, parse predictions, and score results.
+1. Simulates Moran-process runs with hidden true parameters `(r, i0, N)`.
+2. Saves **observable-only** trace CSVs for GPT.
+3. Sends those traces to the OpenAI Batch API to estimate `r` and `i0`.
+4. Parses and scores GPT's predictions against the hidden truth stored separately in metadata and the dataset summary.
 
-## Folder layout
+## Important design rule
 
-```text
-moran_project/
-├─ simulation/
-├─ evaluation/
-├─ data/
-│  ├─ raw/
-│  ├─ cropped/
-│  ├─ batches/
-│  └─ results/
-├─ config/
-└─ main.py
-```
+The trace CSV files sent to GPT **must not** contain `true_i0`, `true_r`, or other answer columns.
+The prompt layer enforces this and raises an error if such columns appear in a trace CSV.
 
-## Why this rewrite helps
+## Commands
 
-1. Raw simulation is now separate from API evaluation.
-2. Traces are saved with explicit headers and metadata.
-3. The prompt no longer hardcodes `N = 20`; it tells the model to use the `N` column from the trace.
-4. Scoring is based on parsed outputs against a summary table of ground truth.
-5. Cropped traces are generated systematically (`full`, `prefix10`, `suffix10`, `stride3`).
-
-## Quick start
-
-Create traces:
+Generate data:
 
 ```bash
 python main.py simulate --num-experiments 10 --replicates 5 --seed 42
@@ -45,35 +29,23 @@ python main.py send --summary-csv data/results/dataset_summary.csv --batch-jsonl
 Fetch completed outputs:
 
 ```bash
-python main.py fetch --batch-ids data/batches/batch_job_ids_gpt-4o-mini.jsonl --output-dir data/batches/outputs
+python main.py fetch
 ```
 
-Parse one output file:
+Parse one downloaded output JSONL:
 
 ```bash
-python main.py parse --output-jsonl data/batches/outputs/<batch_id>_output.jsonl --parsed-csv data/results/parsed_predictions.csv
+python main.py parse --output-jsonl data/batches/outputs/<batch_id>_output.jsonl
 ```
 
 Score predictions:
 
 ```bash
-python main.py score --summary-csv data/results/dataset_summary.csv --parsed-csv data/results/parsed_predictions.csv --scored-csv data/results/scored_predictions.csv
+python main.py score
 ```
 
-Analyze:
+Summarize by crop type:
 
 ```bash
-python main.py analyze --scored-csv data/results/scored_predictions.csv
+python main.py analyze
 ```
-
-## Notes for the paper
-
-This structure is better aligned with an experimental paper because it separates:
-
-- stochastic data generation,
-- partial-observability / cropping design,
-- LLM prompting,
-- prediction parsing,
-- evaluation.
-
-That makes it easier to argue whether failure comes from code issues, prompt design, or true non-identifiability.
