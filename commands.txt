@@ -1,4 +1,4 @@
-python main.py simulate --num-experiments 10 --replicates 5 --seed 42
+python main.py simulate --num-experiments 3 --replicates 5 --N 20 --r 1.25 --i0 4 --seed 42
 python main.py send --summary-csv data/results/dataset_summary.csv --batch-jsonl data/batches/batch.jsonl --model gpt-4o-mini
 python main.py fetch
 python main.py parse --output-jsonl data/batches/outputs/<batch_id>_output.jsonl

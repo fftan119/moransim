@@ -49,3 +49,16 @@ Summarize by crop type:
 ```bash
 python main.py analyze
 ```
+
+
+Fixed-parameter simulation example:
+
+```bash
+python main.py simulate --num-experiments 3 --replicates 5 --N 20 --r 1.25 --i0 4 --seed 42
+```
+
+You can also fix only some parameters and let the others be sampled. For example:
+
+```bash
+python main.py simulate --num-experiments 10 --replicates 3 --N 20
+```

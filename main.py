@@ -14,6 +14,9 @@ def build_parser() -> argparse.ArgumentParser:
     sim.add_argument("--num-experiments", type=int, default=10)
     sim.add_argument("--replicates", type=int, default=5)
     sim.add_argument("--seed", type=int, default=42)
+    sim.add_argument("--N", type=int, default=None, help="Fix the population size N for every experiment")
+    sim.add_argument("--r", type=float, default=None, help="Fix the relative fitness r for every experiment")
+    sim.add_argument("--i0", type=int, default=None, help="Fix the initial mutant count i0 for every experiment")
 
     send = sub.add_parser("send", help="Submit the observable traces to the OpenAI Batch API")
     send.add_argument("--summary-csv", default=str(BASE_DIR / "data" / "results" / "dataset_summary.csv"))
@@ -50,6 +53,9 @@ def main() -> None:
             replicates=args.replicates,
             seed=args.seed,
             base_dir=BASE_DIR,
+            fixed_r=args.r,
+            fixed_N=args.N,
+            fixed_i0=args.i0,
         )
         print(f"Dataset summary written to {summary}")
 
