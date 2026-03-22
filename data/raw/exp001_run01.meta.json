@@ -1,8 +1,8 @@
 {
   "run_id": "exp001_run01",
-  "true_r": 1.37,
-  "true_N": 15,
-  "true_i0": 12,
+  "true_r": 1.25,
+  "true_N": 20,
+  "true_i0": 4,
   "absorbed_type": "A",
-  "num_events": 24
+  "num_events": 200
 }

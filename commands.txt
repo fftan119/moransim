@@ -4,3 +4,6 @@ python main.py fetch
 python main.py parse --output-jsonl data/batches/outputs/<batch_id>_output.jsonl
 python main.py score
 python main.py analyze
+
+visualize:
+python visualize.py --scored-csv data/results/scored_predictions.csv
