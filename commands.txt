@@ -7,3 +7,6 @@ python main.py analyze
 
 visualize:
 python visualize.py --scored-csv data/results/scored_predictions.csv
+
+cleanup:
+python cleanup_run.py --delete-summary
