@@ -13,7 +13,7 @@ from .prompts import build_system_prompt, build_user_prompt_from_csv
 
 def make_task(row: dict[str, str], model_name: str) -> dict:
     return {
-        "custom_id": f"{row['run_id']}::{row['crop_name']}",
+        "custom_id": row["run_id"],
         "method": "POST",
         "url": "/v1/chat/completions",
         "body": {

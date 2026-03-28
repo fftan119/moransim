@@ -21,7 +21,7 @@ def score_predictions(summary_csv: str | Path, parsed_csv: str | Path, scored_cs
     truth: dict[str, dict[str, str]] = {}
     with summary_csv.open("r", newline="", encoding="utf-8") as handle:
         for row in csv.DictReader(handle):
-            truth[f"{row['run_id']}::{row['crop_name']}"] = row
+            truth[row["run_id"]] = row
 
     scored_rows: list[dict[str, Any]] = []
     with parsed_csv.open("r", newline="", encoding="utf-8") as handle:
