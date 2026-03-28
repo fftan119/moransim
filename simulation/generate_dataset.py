@@ -3,7 +3,6 @@ from __future__ import annotations
 import csv
 import random
 from pathlib import Path
-from .crop import make_crop_variants
 from .io import write_run_metadata_json, write_run_trace_csv
 from .moran import simulate_moran_run
 
@@ -25,10 +24,8 @@ def generate_dataset(
 ) -> Path:
     base_dir = Path(base_dir)
     raw_dir = base_dir / "data" / "raw"
-    cropped_dir = base_dir / "data" / "cropped"
     results_dir = base_dir / "data" / "results"
     raw_dir.mkdir(parents=True, exist_ok=True)
-    cropped_dir.mkdir(parents=True, exist_ok=True)
     results_dir.mkdir(parents=True, exist_ok=True)
 
     rng = random.Random(seed)
@@ -52,27 +49,23 @@ def generate_dataset(
             run = simulate_moran_run(r=true_r, N=true_N, i0=true_i0, run_id=run_id, rng=rng)
             raw_trace_path = write_run_trace_csv(run, raw_dir / f"{run_id}.csv")
             meta_path = write_run_metadata_json(run, raw_dir / f"{run_id}.meta.json")
-            crop_paths = make_crop_variants(raw_trace_path, cropped_dir)
-
-            for crop_name, crop_path in crop_paths.items():
-                summary_rows.append(
-                    {
-                        "run_id": run_id,
-                        "crop_name": crop_name,
-                        "trace_csv": str(crop_path),
-                        "meta_json": str(meta_path),
-                        "true_r": true_r,
-                        "true_N": true_N,
-                        "true_i0": true_i0,
-                        "num_events_full": len(run.steps),
-                    }
-                )
+            summary_rows.append(
+                {
+                    "run_id": run_id,
+                    "trace_csv": str(raw_trace_path),
+                    "meta_json": str(meta_path),
+                    "true_r": true_r,
+                    "true_N": true_N,
+                    "true_i0": true_i0,
+                    "num_events_full": len(run.steps),
+                }
+            )
 
     summary_path = results_dir / "dataset_summary.csv"
     with summary_path.open("w", newline="", encoding="utf-8") as handle:
         writer = csv.DictWriter(
             handle,
-            fieldnames=["run_id", "crop_name", "trace_csv", "meta_json", "true_r", "true_N", "true_i0", "num_events_full"],
+        fieldnames=["run_id", "trace_csv", "meta_json", "true_r", "true_N", "true_i0", "num_events_full"],
         )
         writer.writeheader()
         writer.writerows(summary_rows)
