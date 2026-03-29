@@ -19,6 +19,7 @@ to fetch, parse, and vote all points in one go. Then visualize:
 """
 
 import argparse
+import shutil
 import subprocess
 import sys
 import json
@@ -28,16 +29,14 @@ from pathlib import Path
 
 GRID = [
     # (r,    i0)
-    (1,   2),
-    (2,  2),
-    (1.5,    6),
-    (0.75,   6),
-    (1.45,   10),
+    (0.75,   3),
+    (0.75,  10),
+    (1.0,    5),
+    (1.0,   10),
+    (1.25,   3),
     (1.25,  10),
-    (1.3,    14),
-    (0.6,   14),
-    (1.25,    18),
-    (0.15,   18),
+    (1.5,    5),
+    (1.5,   15),
 ]
 
 N          = 20
@@ -47,17 +46,36 @@ SEED       = 42
 
 # ─────────────────────────────────────────────────────────────────────────────
 
-BATCH_IDS_FILE = Path("data/batches/classify_batch_job_ids_gpt-4o-mini.jsonl")
+BATCHES_DIR    = Path("data/batches")
 OUTPUTS_DIR    = Path("data/batches/outputs")
 RESULTS_DIR    = Path("data/results")
+SUMMARIES_DIR  = RESULTS_DIR / "summaries"
+BATCH_IDS_FILE = BATCHES_DIR / f"classify_batch_job_ids_{MODEL}.jsonl"
 
 
 def run(cmd: list[str]) -> None:
     print(f"\n>>> {' '.join(cmd)}")
-    result = subprocess.run(cmd, check=True)
+    subprocess.run(cmd, check=True)
+
+
+def _cleanup_intermediates() -> None:
+    """Remove per-point intermediate files but keep batch IDs and voted CSV."""
+    for f in [
+        RESULTS_DIR / "classify_parsed.csv",
+        RESULTS_DIR / "dataset_summary.csv",
+        BATCHES_DIR / "classify_batch.jsonl",
+    ]:
+        if f.exists():
+            f.unlink()
+    # Remove raw and cropped data dirs
+    for d in [Path("data/raw"), Path("data/cropped")]:
+        if d.exists():
+            shutil.rmtree(d)
 
 
 def simulate_and_send() -> None:
+    SUMMARIES_DIR.mkdir(parents=True, exist_ok=True)
+
     print(f"\n{'='*60}")
     print(f"Running {len(GRID)} grid points")
     print(f"N={N}, replicates={REPLICATES}, model={MODEL}")
@@ -66,9 +84,7 @@ def simulate_and_send() -> None:
     for r, i0 in GRID:
         print(f"\n── Point: r={r}, i0={i0} ──")
 
-        # Clean intermediate files from previous point (keep voted csv)
-        run([sys.executable, "cleanup_classify.py"])
-        run([sys.executable, "cleanup_run.py", "--delete-summary"])
+        _cleanup_intermediates()
 
         # Simulate
         run([
@@ -81,9 +97,16 @@ def simulate_and_send() -> None:
             "--seed", str(SEED),
         ])
 
-        # Send classification batch
+        # Save a permanent copy of this point's summary CSV
+        src = RESULTS_DIR / "dataset_summary.csv"
+        dst = SUMMARIES_DIR / f"summary_r{r}_i{i0}.csv"
+        shutil.copy(src, dst)
+        print(f"   Saved summary → {dst}")
+
+        # Send classification batch, pointing at the permanent summary
         run([
             sys.executable, "main.py", "classify-send",
+            "--summary-csv", str(dst),
             "--model", MODEL,
         ])
 
@@ -100,14 +123,12 @@ def fetch_parse_vote() -> None:
     print("Fetching, parsing, and voting all completed batches")
     print(f"{'='*60}")
 
-    # Fetch all completed batches
     run([
         sys.executable, "main.py", "classify-fetch",
         "--batch-ids-jsonl", str(BATCH_IDS_FILE),
         "--output-dir", str(OUTPUTS_DIR),
     ])
 
-    # Find all downloaded classify output files
     output_files = sorted(OUTPUTS_DIR.glob("*_classify_output.jsonl"))
     if not output_files:
         print("\nNo completed output files found. Batches may still be in progress.")
@@ -118,12 +139,11 @@ def fetch_parse_vote() -> None:
     for output_jsonl in output_files:
         print(f"\n── Processing: {output_jsonl.name} ──")
 
-        # Extract batch_id to find matching summary csv from batch ids file
         batch_id = output_jsonl.name.replace("_classify_output.jsonl", "")
         summary_csv = _find_summary_for_batch(batch_id)
 
         if summary_csv is None:
-            print(f"  WARNING: Could not find summary CSV for {batch_id}, skipping.")
+            print(f"   WARNING: Could not find summary CSV for {batch_id}, skipping.")
             continue
 
         parsed_csv = RESULTS_DIR / f"classify_parsed_{batch_id}.csv"
@@ -147,7 +167,7 @@ def fetch_parse_vote() -> None:
 
 
 def _find_summary_for_batch(batch_id: str) -> Path | None:
-    """Look up the summary CSV path recorded when the batch was sent."""
+    """Look up the permanent summary CSV recorded when the batch was sent."""
     if not BATCH_IDS_FILE.exists():
         return None
     with BATCH_IDS_FILE.open("r", encoding="utf-8") as f:
