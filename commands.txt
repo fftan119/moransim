@@ -19,7 +19,7 @@ python cleanup_run.py --delete-summary
 
 # --- Repeat this block for each (r, i₀, N) point ---
 
-python main.py simulate --replicates 20 --r 1.5 --N 20 --i0 5 --seed 42
+python main.py simulate --num-experiments 1 --replicates 20 --r 1.5 --N 20 --i0 5 --seed 42
 python main.py classify-send
 python main.py classify-fetch
 python main.py classify-parse --output-jsonl data/batches/outputs/batch_XXX_classify_output.jsonl
