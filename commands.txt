@@ -1,7 +1,7 @@
 python main.py simulate --num-experiments 3 --replicates 5 --N 20 --r 1.25 --i0 4 --seed 42
 
 
-python main.py simulate --num-experiments 1 --replicates 5 --N 20 --r 1.25 --i0 4 --seed 42
+python main.py simulate --num-experiments 1 --replicates 50 --N 20 --r 1.25 --i0 5 --seed 42
 python main.py send --summary-csv data/results/dataset_summary.csv --batch-jsonl data/batches/batch.jsonl --model gpt-4o-mini
 python main.py fetch
 python main.py parse --output-jsonl data/batches/outputs/<batch_id>_output.jsonl
@@ -13,3 +13,24 @@ python visualize.py --scored-csv data/results/scored_predictions.csv
 
 cleanup:
 python cleanup_run.py --delete-summary
+
+
+#fixation probablity \rho probability
+
+# Step 1 — simulate (same as before, reuse existing data or re-run)
+python main.py simulate --replicates 20 --r 1.5 --N 20 --i0 5 --seed 42
+
+# Step 2 — send classification batch
+python main.py classify-send --model gpt-4o-mini
+
+# Step 3 — fetch when complete
+python main.py classify-fetch
+
+# Step 4 — parse output (replace batch ID with your actual ID, no angle brackets)
+python main.py classify-parse --output-jsonl data/batches/outputs/batch_XXX_classify_output.jsonl
+
+# Step 5 — majority vote + score against true rho
+python main.py classify-vote
+
+# Step 6 — visualize
+python visualize_classify.py --voted-csv data/results/classify_voted.csv
