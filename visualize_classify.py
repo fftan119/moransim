@@ -13,23 +13,27 @@ def plot_classification_grid(
     output_dir: str | Path = "data/results/plots",
     i0_max: int = 20,
     r_max: float = 2.0,
+    use_true_label: bool = False,
 ) -> Path:
     voted_csv = Path(voted_csv)
     output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    rows: list[dict] = []
+    # Deduplicate by (true_r, true_i0) — last write wins
+    label_col = "true_label" if use_true_label else "majority_vote"
+    seen: dict[tuple, dict] = {}
     with voted_csv.open("r", newline="", encoding="utf-8") as handle:
         for row in csv.DictReader(handle):
             try:
                 r_val = float(row["true_r"])
                 i0_val = int(row["true_i0"])
-                label = row["majority_vote"].strip().upper()
+                label = row[label_col].strip().upper()
             except (KeyError, ValueError):
                 continue
             if label in ("X", "O"):
-                rows.append({"r": r_val, "i0": i0_val, "label": label})
+                seen[(r_val, i0_val)] = {"r": r_val, "i0": i0_val, "label": label}
 
+    rows = list(seen.values())
     if not rows:
         raise ValueError(f"No valid rows found in {voted_csv}")
 
@@ -47,16 +51,15 @@ def plot_classification_grid(
             color=color,
         )
 
-    # Axes orientation: x = i0 (0 left → i0_max right), y = r (0 bottom → r_max top)
-    # but we want r descending top-to-bottom so invert y
     ax.set_xlim(-0.5, i0_max + 0.5)
     ax.set_ylim(0, r_max)
     ax.invert_yaxis()  # r=0 at top, r=r_max at bottom
 
     ax.set_xlabel("Initial mutants  $i_0$", fontsize=13)
     ax.set_ylabel("Relative fitness  $r$", fontsize=13)
+    label_source = "true label" if use_true_label else "GPT majority vote"
     ax.set_title(
-        "GPT classification: fixation probability $\\rho$ vs 0.5\n"
+        f"Fixation probability classification ({label_source})\n"
         r"$\mathbf{X}$ = $\rho > 0.5$  (red),  $\mathbf{O}$ = $\rho < 0.5$  (black)",
         fontsize=12,
     )
@@ -70,7 +73,7 @@ def plot_classification_grid(
     fig.savefig(out_path, dpi=200)
     plt.close(fig)
 
-    print(f"Saved: {out_path}")
+    print(f"Saved: {out_path}  ({len(rows)} points plotted)")
     return out_path
 
 
@@ -98,6 +101,11 @@ def main() -> None:
         default=2.0,
         help="Maximum r value on y-axis",
     )
+    parser.add_argument(
+        "--true-label",
+        action="store_true",
+        help="Plot the analytically computed true label instead of GPT majority vote",
+    )
     args = parser.parse_args()
 
     plot_classification_grid(
@@ -105,6 +113,7 @@ def main() -> None:
         output_dir=args.output_dir,
         i0_max=args.i0_max,
         r_max=args.r_max,
+        use_true_label=args.true_label,
     )
 
 
