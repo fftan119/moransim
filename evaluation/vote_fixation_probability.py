@@ -88,9 +88,11 @@ def run_vote(
         "rho_true", "true_label", "majority_vote", "correct",
         "x_count", "o_count", "n_replicates", "per_replicate_labels",
     ]
-    with voted_csv.open("w", newline="", encoding="utf-8") as handle:
+    file_exists = voted_csv.exists()
+    with voted_csv.open("a", newline="", encoding="utf-8") as handle:
         writer = csv.DictWriter(handle, fieldnames=fieldnames)
-        writer.writeheader()
+        if not file_exists:
+            writer.writeheader()
         writer.writerows(result_rows)
 
     # Print summary
