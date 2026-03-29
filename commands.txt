@@ -17,20 +17,16 @@ python cleanup_run.py --delete-summary
 
 #fixation probablity \rho probability
 
-# Step 1 — simulate (same as before, reuse existing data or re-run)
+# --- Repeat this block for each (r, i₀, N) point ---
+
 python main.py simulate --replicates 20 --r 1.5 --N 20 --i0 5 --seed 42
-
-# Step 2 — send classification batch
-python main.py classify-send --model gpt-4o-mini
-
-# Step 3 — fetch when complete
+python main.py classify-send
 python main.py classify-fetch
-
-# Step 4 — parse output (replace batch ID with your actual ID, no angle brackets)
 python main.py classify-parse --output-jsonl data/batches/outputs/batch_XXX_classify_output.jsonl
+python main.py classify-vote        ← appends one row to classify_voted.csv
 
-# Step 5 — majority vote + score against true rho
-python main.py classify-vote
+python cleanup_classify.py          ← clears intermediates, keeps classify_voted.csv
 
-# Step 6 — visualize
-python visualize_classify.py --voted-csv data/results/classify_voted.csv
+# --- Once all points are done ---
+
+python visualize_classify.py        ← plots the full grid
