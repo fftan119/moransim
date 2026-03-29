@@ -32,8 +32,11 @@ python cleanup_classify.py          ← clears intermediates, keeps classify_vot
 python visualize_classify.py        ← plots the full grid
 
 
+
+
 #multi clean workflow:
 
+python pregrid_cleanup.py
 python run_grid.py                  # simulate + send all points
 # ... wait for OpenAI to finish ...
 python run_grid.py --fetch-parse-vote   # fetch + parse + vote all points
