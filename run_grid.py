@@ -3,68 +3,42 @@ from __future__ import annotations
 """
 Grid runner for fixation probability classification.
 
-Define your (r, i0) pairs in the GRID list below, set N, REPLICATES,
-and MODEL, then run:
+Define your (r, i0) pairs in GRID, set N, REPLICATES, MODEL, then run:
 
-    python run_grid.py
+    python run_grid.py --group my_experiment
 
-This will simulate and send a classification batch for each point.
-Once all batches are complete on OpenAI, run:
+This simulates and sends a classification batch for each point, storing
+everything under data/groups/my_experiment/.
 
-    python run_grid.py --fetch-parse-vote
+Once batches are complete on OpenAI:
 
-to fetch, parse, and vote all points in one go. Then visualize:
+    python run_grid.py --group my_experiment --fetch-parse-vote
 
-    python visualize_classify.py
+Then visualize:
+
+    python visualize_classify.py --group my_experiment
 """
 
 import argparse
+import csv
+import json
 import shutil
 import subprocess
 import sys
-import json
 from pathlib import Path
 
 # ── Configure your grid here ─────────────────────────────────────────────────
 
 GRID = [
-    (1.6666, 1),   # rho = 0.4
-    (1.2883, 2),   # rho = 0.4
-    (1.581 , 2),   # rho = 0.6
-    (1.1754, 3),   # rho = 0.4
-    (1.3557, 3),   # rho = 0.6
-    (1.1161, 4),   # rho = 0.4
-    (1.2522, 4),   # rho = 0.6
-    (1.0766, 5),   # rho = 0.4
-    (1.1904, 5),   # rho = 0.6
-    (1.0466, 6),   # rho = 0.4
-    (1.1473, 6),   # rho = 0.6
-    (1.0218, 7),   # rho = 0.4
-    (1.1143, 7),   # rho = 0.6
-    (1.0   , 8),   # rho = 0.4
-    (1.087 , 8),   # rho = 0.6
-    (0.9798, 9),   # rho = 0.4
-    (1.0631, 9),   # rho = 0.6
-    (0.9603, 10),  # rho = 0.4
-    (1.0414, 10),  # rho = 0.6
-    (0.9406, 11),  # rho = 0.4
-    (1.0206, 11),  # rho = 0.6
-    (0.92  , 12),  # rho = 0.4
-    (1.0   , 12),  # rho = 0.6
-    (0.8975, 13),  # rho = 0.4
-    (0.9786, 13),  # rho = 0.6
-    (0.8716, 14),  # rho = 0.4
-    (0.9555, 14),  # rho = 0.6
-    (0.8401, 15),  # rho = 0.4
-    (0.9289, 15),  # rho = 0.6
-    (0.7986, 16),  # rho = 0.4
-    (0.896 , 16),  # rho = 0.6
-    (0.7376, 17),  # rho = 0.4
-    (0.8508, 17),  # rho = 0.6
-    (0.6325, 18),  # rho = 0.4
-    (0.7762, 18),  # rho = 0.6
-    (0.4   , 19),  # rho = 0.4
-    (0.6   , 19),  # rho = 0.6
+    # (r,    i0)
+    (0.75,   3),
+    (0.75,  10),
+    (1.0,    5),
+    (1.0,   10),
+    (1.25,   3),
+    (1.25,  10),
+    (1.5,    5),
+    (1.5,   15),
 ]
 
 N          = 20
@@ -74,90 +48,177 @@ SEED       = 42
 
 # ─────────────────────────────────────────────────────────────────────────────
 
-BATCHES_DIR    = Path("data/batches")
-OUTPUTS_DIR    = Path("data/batches/outputs")
-RESULTS_DIR    = Path("data/results")
-SUMMARIES_DIR  = RESULTS_DIR / "summaries"
-BATCH_IDS_FILE = BATCHES_DIR / f"classify_batch_job_ids_{MODEL}.jsonl"
+GROUPS_DIR = Path("data/groups")
+
+
+def group_dir(group: str) -> Path:
+    return GROUPS_DIR / group
+
+
+def group_paths(group: str) -> dict[str, Path]:
+    base = group_dir(group)
+    return {
+        "base":       base,
+        "raw":        base / "raw",
+        "summaries":  base / "summaries",
+        "batches":    base / "batches",
+        "outputs":    base / "batches" / "outputs",
+        "parsed":     base / "parsed",
+        "results":    base / "results",
+        "batch_ids":  base / "batches" / f"batch_ids_{MODEL}.jsonl",
+        "voted_csv":  base / "results" / "classify_voted.csv",
+        "group_json": base / "group.json",
+    }
+
+
+def init_group(group: str) -> None:
+    paths = group_paths(group)
+    for key, p in paths.items():
+        if key not in ("batch_ids", "voted_csv", "group_json"):
+            p.mkdir(parents=True, exist_ok=True)
+
+    gj = paths["group_json"]
+    if not gj.exists():
+        gj.write_text(json.dumps({
+            "group": group,
+            "N": N,
+            "replicates": REPLICATES,
+            "model": MODEL,
+            "points": [],
+        }, indent=2))
+        print(f"Created group: {group}")
+    else:
+        print(f"Appending to existing group: {group}")
+
+
+def register_point(group: str, r: float, i0: int) -> None:
+    paths = group_paths(group)
+    gj = paths["group_json"]
+    meta = json.loads(gj.read_text())
+    entry = {"r": r, "i0": i0}
+    if entry not in meta["points"]:
+        meta["points"].append(entry)
+    gj.write_text(json.dumps(meta, indent=2))
 
 
 def run(cmd: list[str]) -> None:
-    print(f"\n>>> {' '.join(cmd)}")
+    print(f"\n>>> {' '.join(str(c) for c in cmd)}")
     subprocess.run(cmd, check=True)
 
 
-def _cleanup_intermediates() -> None:
-    """Remove per-point intermediate files but keep batch IDs and voted CSV."""
-    for f in [
-        RESULTS_DIR / "classify_parsed.csv",
-        RESULTS_DIR / "dataset_summary.csv",
-        BATCHES_DIR / "classify_batch.jsonl",
-    ]:
-        if f.exists():
-            f.unlink()
-    # Remove raw and cropped data dirs
-    for d in [Path("data/raw"), Path("data/cropped")]:
-        if d.exists():
-            shutil.rmtree(d)
+def make_summary_csv(r: float, i0: int, summary_path: Path) -> None:
+    summary_path.parent.mkdir(parents=True, exist_ok=True)
+    fieldnames = ["run_id", "trace_csv", "meta_json", "true_r", "true_N", "true_i0", "num_events_full"]
+    rows = [
+        {"run_id": f"exp001_run{rep:02d}", "trace_csv": "", "meta_json": "",
+         "true_r": r, "true_N": N, "true_i0": i0, "num_events_full": ""}
+        for rep in range(1, REPLICATES + 1)
+    ]
+    with summary_path.open("w", newline="", encoding="utf-8") as f:
+        writer = csv.DictWriter(f, fieldnames=fieldnames)
+        writer.writeheader()
+        writer.writerows(rows)
 
 
-def simulate_and_send() -> None:
-    SUMMARIES_DIR.mkdir(parents=True, exist_ok=True)
+def simulate_and_send(group: str) -> None:
+    init_group(group)
+    paths = group_paths(group)
 
     print(f"\n{'='*60}")
-    print(f"Running {len(GRID)} grid points")
-    print(f"N={N}, replicates={REPLICATES}, model={MODEL}")
+    print(f"Group: {group}")
+    print(f"Running {len(GRID)} grid points | N={N}, replicates={REPLICATES}, model={MODEL}")
     print(f"{'='*60}")
 
     for r, i0 in GRID:
         print(f"\n── Point: r={r}, i0={i0} ──")
 
-        _cleanup_intermediates()
+        # Clean shared temp dirs before each point
+        for d in [Path("data/raw"), Path("data/cropped")]:
+            if d.exists():
+                shutil.rmtree(d)
+        for f in [Path("data/results/dataset_summary.csv"),
+                  Path("data/results/classify_parsed.csv"),
+                  Path(f"data/batches/classify_batch.jsonl")]:
+            if f.exists():
+                f.unlink()
 
         # Simulate
-        run([
-            sys.executable, "main.py", "simulate",
-            "--num-experiments", "1",
-            "--replicates", str(REPLICATES),
-            "--N", str(N),
-            "--r", str(r),
-            "--i0", str(i0),
-            "--seed", str(SEED),
+        run([sys.executable, "main.py", "simulate",
+             "--num-experiments", "1",
+             "--replicates", str(REPLICATES),
+             "--N", str(N),
+             "--r", str(r),
+             "--i0", str(i0),
+             "--seed", str(SEED),
         ])
 
-        # Save a permanent copy of this point's summary CSV
-        src = RESULTS_DIR / "dataset_summary.csv"
-        dst = SUMMARIES_DIR / f"summary_r{r}_i{i0}.csv"
-        shutil.copy(src, dst)
-        print(f"   Saved summary → {dst}")
+        # Copy raw traces into group
+        raw_point_dir = paths["raw"] / f"r{r}_i{i0}"
+        raw_point_dir.mkdir(parents=True, exist_ok=True)
+        for csv_file in Path("data/raw").glob("*.csv"):
+            shutil.copy(csv_file, raw_point_dir / csv_file.name)
 
-        # Send classification batch, pointing at the permanent summary
-        run([
-            sys.executable, "main.py", "classify-send",
-            "--summary-csv", str(dst),
-            "--model", MODEL,
+        # Build summary CSV pointing at group raw dir
+        summary_path = paths["summaries"] / f"summary_r{r}_i{i0}.csv"
+        # Write summary with correct trace_csv paths
+        summary_path.parent.mkdir(parents=True, exist_ok=True)
+        fieldnames = ["run_id", "trace_csv", "meta_json", "true_r", "true_N", "true_i0", "num_events_full"]
+        rows = []
+        for rep in range(1, REPLICATES + 1):
+            run_id = f"exp001_run{rep:02d}"
+            trace = raw_point_dir / f"{run_id}.csv"
+            rows.append({"run_id": run_id, "trace_csv": str(trace),
+                         "meta_json": "", "true_r": r, "true_N": N,
+                         "true_i0": i0, "num_events_full": ""})
+        with summary_path.open("w", newline="", encoding="utf-8") as f:
+            writer = csv.DictWriter(f, fieldnames=fieldnames)
+            writer.writeheader()
+            writer.writerows(rows)
+
+        # Send classification batch using group summary
+        run([sys.executable, "main.py", "classify-send",
+             "--summary-csv", str(summary_path),
+             "--batch-jsonl", str(paths["batches"] / "classify_batch.jsonl"),
+             "--model", MODEL,
         ])
 
-        print(f"✓ Batch sent for r={r}, i0={i0}")
+        # Move batch IDs into group
+        default_ids = Path(f"data/batches/classify_batch_job_ids_{MODEL}.jsonl")
+        if default_ids.exists():
+            with default_ids.open("r") as src, paths["batch_ids"].open("a") as dst:
+                for line in src:
+                    # Rewrite summary_csv path to point at group summary
+                    record = json.loads(line)
+                    record["summary_csv"] = str(summary_path)
+                    record["r"] = r
+                    record["i0"] = i0
+                    dst.write(json.dumps(record) + "\n")
+            default_ids.unlink()
+
+        register_point(group, r, i0)
+        print(f"✓ r={r}, i0={i0} registered to group '{group}'")
 
     print(f"\n{'='*60}")
-    print("All batches submitted. Wait for them to complete on OpenAI,")
-    print("then run:  python run_grid.py --fetch-parse-vote")
+    print(f"All batches submitted to group '{group}'.")
+    print(f"Wait for OpenAI to complete, then run:")
+    print(f"  python run_grid.py --group {group} --fetch-parse-vote")
     print(f"{'='*60}")
 
 
-def fetch_parse_vote() -> None:
+def fetch_parse_vote(group: str) -> None:
+    paths = group_paths(group)
+
     print(f"\n{'='*60}")
-    print("Fetching, parsing, and voting all completed batches")
+    print(f"Fetching, parsing, and voting for group: {group}")
     print(f"{'='*60}")
 
-    run([
-        sys.executable, "main.py", "classify-fetch",
-        "--batch-ids-jsonl", str(BATCH_IDS_FILE),
-        "--output-dir", str(OUTPUTS_DIR),
+    # Fetch into group outputs dir
+    run([sys.executable, "main.py", "classify-fetch",
+         "--batch-ids-jsonl", str(paths["batch_ids"]),
+         "--output-dir", str(paths["outputs"]),
     ])
 
-    output_files = sorted(OUTPUTS_DIR.glob("*_classify_output.jsonl"))
+    output_files = sorted(paths["outputs"].glob("*_classify_output.jsonl"))
     if not output_files:
         print("\nNo completed output files found. Batches may still be in progress.")
         return
@@ -166,39 +227,34 @@ def fetch_parse_vote() -> None:
 
     for output_jsonl in output_files:
         print(f"\n── Processing: {output_jsonl.name} ──")
-
         batch_id = output_jsonl.name.replace("_classify_output.jsonl", "")
-        summary_csv = _find_summary_for_batch(batch_id)
+        summary_csv = _find_summary(paths["batch_ids"], batch_id)
 
         if summary_csv is None:
-            print(f"   WARNING: Could not find summary CSV for {batch_id}, skipping.")
+            print(f"   WARNING: No summary found for {batch_id}, skipping.")
             continue
 
-        parsed_csv = RESULTS_DIR / f"classify_parsed_{batch_id}.csv"
-
-        run([
-            sys.executable, "main.py", "classify-parse",
-            "--output-jsonl", str(output_jsonl),
-            "--parsed-csv", str(parsed_csv),
+        parsed_csv = paths["parsed"] / f"classify_parsed_{batch_id}.csv"
+        run([sys.executable, "main.py", "classify-parse",
+             "--output-jsonl", str(output_jsonl),
+             "--parsed-csv", str(parsed_csv),
         ])
-
-        run([
-            sys.executable, "main.py", "classify-vote",
-            "--parsed-csv", str(parsed_csv),
-            "--summary-csv", str(summary_csv),
-            "--voted-csv", str(RESULTS_DIR / "classify_voted.csv"),
+        run([sys.executable, "main.py", "classify-vote",
+             "--parsed-csv", str(parsed_csv),
+             "--summary-csv", str(summary_csv),
+             "--voted-csv", str(paths["voted_csv"]),
         ])
 
     print(f"\n{'='*60}")
-    print("All points processed. Run:  python visualize_classify.py")
+    print(f"Done. Visualize with:")
+    print(f"  python visualize_classify.py --group {group}")
     print(f"{'='*60}")
 
 
-def _find_summary_for_batch(batch_id: str) -> Path | None:
-    """Look up the permanent summary CSV recorded when the batch was sent."""
-    if not BATCH_IDS_FILE.exists():
+def _find_summary(batch_ids_file: Path, batch_id: str) -> Path | None:
+    if not batch_ids_file.exists():
         return None
-    with BATCH_IDS_FILE.open("r", encoding="utf-8") as f:
+    with batch_ids_file.open("r") as f:
         for line in f:
             line = line.strip()
             if not line:
@@ -213,19 +269,17 @@ def _find_summary_for_batch(batch_id: str) -> Path | None:
 
 def main() -> None:
     parser = argparse.ArgumentParser(
-        description="Run simulate+send for all grid points, or fetch+parse+vote when done."
+        description="Run grid simulation and classification batches within a named group."
     )
-    parser.add_argument(
-        "--fetch-parse-vote", dest="fetch_parse_vote",
-        action="store_true",
-        help="Fetch completed batches and process them (run after batches complete)",
-    )
+    parser.add_argument("--group", required=True, help="Group name (e.g. boundary_sweep_N20)")
+    parser.add_argument("--fetch-parse-vote", dest="fetch_parse_vote", action="store_true",
+                        help="Fetch completed batches and process them")
     args = parser.parse_args()
 
     if args.fetch_parse_vote:
-        fetch_parse_vote()
+        fetch_parse_vote(args.group)
     else:
-        simulate_and_send()
+        simulate_and_send(args.group)
 
 
 if __name__ == "__main__":
