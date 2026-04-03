@@ -2,8 +2,5 @@
 __pycache__/
 *.pyc
 .env
-data/raw/
-data/cropped/
-data/results/
-data/batches/outputs/
+data/
 .tex
