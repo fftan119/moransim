@@ -58,6 +58,25 @@ def build_parser() -> argparse.ArgumentParser:
     cvote.add_argument("--summary-csv", default=str(BASE_DIR / "data" / "results" / "dataset_summary.csv"))
     cvote.add_argument("--voted-csv", default=str(BASE_DIR / "data" / "results" / "classify_voted.csv"))
 
+    # --- Estimation pipeline ---
+    esend = sub.add_parser("estimation-send", help="Send r estimation batch")
+    esend.add_argument("--summary-csv", default=str(BASE_DIR / "data" / "results" / "dataset_summary.csv"))
+    esend.add_argument("--batch-jsonl", default=str(BASE_DIR / "data" / "batches" / "estimation_batch.jsonl"))
+    esend.add_argument("--model", default="gpt-4o-mini")
+
+    efetch = sub.add_parser("estimation-fetch", help="Fetch completed estimation batch outputs")
+    efetch.add_argument("--batch-ids-jsonl", default=str(BASE_DIR / "data" / "batches" / "estimation_batch_job_ids_gpt-4o-mini.jsonl"))
+    efetch.add_argument("--output-dir", default=str(BASE_DIR / "data" / "batches" / "outputs"))
+
+    eparse = sub.add_parser("estimation-parse", help="Parse estimation output JSONL into CSV")
+    eparse.add_argument("--output-jsonl", required=True)
+    eparse.add_argument("--parsed-csv", default=str(BASE_DIR / "data" / "results" / "estimation_parsed.csv"))
+
+    escore = sub.add_parser("estimation-score", help="Score estimated r against true r")
+    escore.add_argument("--parsed-csv", default=str(BASE_DIR / "data" / "results" / "estimation_parsed.csv"))
+    escore.add_argument("--summary-csv", default=str(BASE_DIR / "data" / "results" / "dataset_summary.csv"))
+    escore.add_argument("--scored-csv", default=str(BASE_DIR / "data" / "results" / "estimation_scored.csv"))
+
     return parser
 
 
@@ -125,6 +144,28 @@ def main() -> None:
         from evaluation.vote_fixation_probability import run_vote
         voted = run_vote(args.parsed_csv, args.summary_csv, args.voted_csv)
         print(f"Voted results written to {voted}")
+
+    elif args.command == "estimation-send":
+        from evaluation.send_batch_estimation import send_estimation_batch
+        batch_id = send_estimation_batch(args.summary_csv, args.batch_jsonl, model_name=args.model)
+        print(f"Submitted estimation batch job: {batch_id}")
+
+    elif args.command == "estimation-fetch":
+        from evaluation.fetch_batch_estimation import fetch_estimation_batches
+        outputs = fetch_estimation_batches(args.batch_ids_jsonl, args.output_dir, verbose=True)
+        print("Downloaded estimation outputs:")
+        for path in outputs:
+            print(f"- {path}")
+
+    elif args.command == "estimation-parse":
+        from evaluation.parse_outputs_estimation import parse_estimation_outputs
+        parsed = parse_estimation_outputs(args.output_jsonl, args.parsed_csv)
+        print(f"Parsed estimation results written to {parsed}")
+
+    elif args.command == "estimation-score":
+        from evaluation.score_estimation import score_estimation
+        scored = score_estimation(args.parsed_csv, args.summary_csv, args.scored_csv)
+        print(f"Scored estimation results written to {scored}")
 
 
 if __name__ == "__main__":

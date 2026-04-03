@@ -1,51 +1,49 @@
-# ── Estimation pipeline (r and i0 regression) ────────────────────────────────
- 
-# Simulate (example with fixed params):
-python main.py simulate --num-experiments 1 --replicates 50 --N 20 --r 1.25 --i0 5 --seed 42
- 
-# Send to GPT:
-python main.py send --summary-csv data/results/dataset_summary.csv --batch-jsonl data/batches/batch.jsonl --model gpt-4o-mini
- 
-# Fetch completed batch:
-python main.py fetch
- 
-# Parse output (replace batch_id with actual ID, no angle brackets):
-python main.py parse --output-jsonl data/batches/outputs/batch_id_output.jsonl
- 
-# Score and analyze:
-python main.py score
-python main.py analyze
- 
-# Visualize:
-python visualize.py --scored-csv data/results/scored_predictions.csv
- 
-# Cleanup:
-python cleanup_run.py --delete-summary
- 
- 
-# ── Fixation probability classification pipeline (group-based) ────────────────
- 
+# ── r Estimation pipeline ─────────────────────────────────────────────────────
+# Estimates relative fitness r from Moran process traces using GPT.
+# Results stored in named groups under data/groups/.
+
+# Edit GRID, N, REPLICATES in run_estimation_grid.py, then:
+
+# Step 1 — simulate + send all grid points to GPT:
+python run_estimation_grid.py --group r_estimation_N20
+
+# Step 2 — wait for OpenAI to complete, then fetch + parse + score:
+python run_estimation_grid.py --group r_estimation_N20 --fetch-parse-score
+
+# Step 3 — visualize violin plots of estimated r per grid point:
+python visualize_estimation.py --group r_estimation_N20
+
+# To add more points to the same group, update GRID and re-run Step 1.
+
+
+# ── Fixation probability classification pipeline ──────────────────────────────
+# Classifies whether rho > 0.5 (X) or rho < 0.5 (O) for each (r, i0) point.
+# Results stored in named groups under data/groups/.
+
 # Edit GRID, N, REPLICATES in run_grid.py, then:
- 
-# Step 1 — simulate + send all points in GRID, registered to a named group:
-python run_grid.py --group my_experiment
- 
-# Step 2 — wait for OpenAI to complete batches, then fetch + parse + vote:
-python run_grid.py --group my_experiment --fetch-parse-vote
- 
-# Step 3 — visualize the group:
-python visualize_classify.py --group my_experiment --N 20
- 
-# To add more points to the same group later, update GRID and re-run Step 1.
-# Results accumulate — nothing gets overwritten.
- 
-# Visualize true labels (analytically computed) instead of GPT vote:
-python visualize_classify.py --group my_experiment --N 20 --true-label
- 
- 
+
+# Step 1 — simulate + send all grid points to GPT:
+python run_grid.py --group N20rho
+
+# Step 2 — wait for OpenAI to complete, then fetch + parse + vote:
+python run_grid.py --group N20rho --fetch-parse-vote
+
+# Step 3 — visualize X/O grid with rho contour lines:
+python visualize_classify.py --group N20rho --N 20
+
+# Visualize analytically correct true labels instead of GPT vote:
+python visualize_classify.py --group N20rho --N 20 --true-label
+
+# To add more points to the same group, update GRID and re-run Step 1.
+
+
 # ── Cleanup ───────────────────────────────────────────────────────────────────
- 
-# Wipe all intermediates before a fresh grid run (does NOT touch data/groups/):
+
+# Wipe intermediate temp files before a fresh grid run:
 python pregrid_cleanup.py
- 
-# Preview what pregrid_cleanup would delete:
+
+# Preview what would be deleted:
+python pregrid_cleanup.py --dry-run
+
+# Wipe raw simulation data between manual simulate runs:
+python cleanup_run.py --delete-summary

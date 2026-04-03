@@ -1,0 +1,61 @@
+custom_id,run_id,exp_id,rho_estimated,label,raw_content
+classify__exp001_run01,exp001_run01,exp001,0.95,X,"{
+  ""rho_estimated"": 0.95
+}"
+classify__exp001_run02,exp001_run02,exp001,0.99,X,"{
+  ""rho_estimated"": 0.99
+}"
+classify__exp001_run03,exp001_run03,exp001,0.95,X,"{
+  ""rho_estimated"": 0.95
+}"
+classify__exp001_run04,exp001_run04,exp001,0.85,X,"{
+  ""rho_estimated"": 0.85
+}"
+classify__exp001_run05,exp001_run05,exp001,0.73,X,"{
+  ""rho_estimated"": 0.73
+}"
+classify__exp001_run06,exp001_run06,exp001,0.25,O,"{
+  ""rho_estimated"": 0.25
+}"
+classify__exp001_run07,exp001_run07,exp001,0.45,O,"{
+  ""rho_estimated"": 0.45
+}"
+classify__exp001_run08,exp001_run08,exp001,0.75,X,"{
+  ""rho_estimated"": 0.75
+}"
+classify__exp001_run09,exp001_run09,exp001,0.85,X,"{
+  ""rho_estimated"": 0.85
+}"
+classify__exp001_run10,exp001_run10,exp001,0.93,X,"{
+  ""rho_estimated"": 0.93
+}"
+classify__exp001_run11,exp001_run11,exp001,0.85,X,"{
+  ""rho_estimated"": 0.85
+}"
+classify__exp001_run12,exp001_run12,exp001,0.55,X,"{
+  ""rho_estimated"": 0.55
+}"
+classify__exp001_run13,exp001_run13,exp001,0.75,X,"{
+  ""rho_estimated"": 0.75
+}"
+classify__exp001_run14,exp001_run14,exp001,0.67,X,"{
+  ""rho_estimated"": 0.67
+}"
+classify__exp001_run15,exp001_run15,exp001,0.85,X,"{
+  ""rho_estimated"": 0.85
+}"
+classify__exp001_run16,exp001_run16,exp001,0.95,X,"{
+  ""rho_estimated"": 0.95
+}"
+classify__exp001_run17,exp001_run17,exp001,0.25,O,"{
+  ""rho_estimated"": 0.25
+}"
+classify__exp001_run18,exp001_run18,exp001,0.45,O,"{
+  ""rho_estimated"": 0.45
+}"
+classify__exp001_run19,exp001_run19,exp001,0.73,X,"{
+  ""rho_estimated"": 0.73
+}"
+classify__exp001_run20,exp001_run20,exp001,0.95,X,"{
+  ""rho_estimated"": 0.95
+}"

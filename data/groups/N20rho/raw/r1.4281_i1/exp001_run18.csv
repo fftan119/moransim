@@ -1,0 +1,11 @@
+step,event,birth_index,birth_type,death_index,death_type,mutants_before,mutants_after,N
+0,0A:10B,0,A,10,B,1,2,20
+1,13B:1B,13,B,1,B,2,2,20
+2,14B:8B,14,B,8,B,2,2,20
+3,17B:0A,17,B,0,A,2,1,20
+4,6B:9B,6,B,9,B,1,1,20
+5,6B:15B,6,B,15,B,1,1,20
+6,17B:3B,17,B,3,B,1,1,20
+7,19B:7B,19,B,7,B,1,1,20
+8,2B:14B,2,B,14,B,1,1,20
+9,15B:10A,15,B,10,A,1,0,20

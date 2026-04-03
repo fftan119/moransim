@@ -30,19 +30,46 @@ from pathlib import Path
 # ── Configure your grid here ─────────────────────────────────────────────────
 
 GRID = [
-    # (r,    i0)
-    (0.75,   3),
-    (0.75,  10),
-    (1.0,    5),
-    (1.0,   10),
-    (1.25,   3),
-    (1.25,  10),
-    (1.5,    5),
-    (1.5,   15),
+    (1.8182, 1),   # rho = 0.45
+    (1.347 , 2),   # rho = 0.45
+    (1.4904, 2),   # rho = 0.55
+    (1.2137, 3),   # rho = 0.45
+    (1.3023, 3),   # rho = 0.55
+    (1.1462, 4),   # rho = 0.45
+    (1.2133, 4),   # rho = 0.55
+    (1.1025, 5),   # rho = 0.45
+    (1.1586, 5),   # rho = 0.55
+    (1.07  , 6),   # rho = 0.45
+    (1.1198, 6),   # rho = 0.55
+    (1.0437, 7),   # rho = 0.45
+    (1.0894, 7),   # rho = 0.55
+    (1.0208, 8),   # rho = 0.45
+    (1.0638, 8),   # rho = 0.55
+    (1.0   , 9),   # rho = 0.45
+    (1.0412, 9),   # rho = 0.55
+    (0.9801, 10),  # rho = 0.45
+    (1.0203, 10),  # rho = 0.55
+    (0.9604, 11),  # rho = 0.45
+    (1.0   , 11),  # rho = 0.55
+    (0.94  , 12),  # rho = 0.45
+    (0.9796, 12),  # rho = 0.55
+    (0.918 , 13),  # rho = 0.45
+    (0.9582, 13),  # rho = 0.55
+    (0.893 , 14),  # rho = 0.45
+    (0.9345, 14),  # rho = 0.55
+    (0.8631, 15),  # rho = 0.45
+    (0.907 , 15),  # rho = 0.55
+    (0.8242, 16),  # rho = 0.45
+    (0.8724, 16),  # rho = 0.55
+    (0.7679, 17),  # rho = 0.45
+    (0.8239, 17),  # rho = 0.55
+    (0.671 , 18),  # rho = 0.45
+    (0.7424, 18),  # rho = 0.55
+    (0.45  , 19),  # rho = 0.45
+    (0.55  , 19),  # rho = 0.55
 ]
-
 N          = 20
-REPLICATES = 20
+REPLICATES = 15
 MODEL      = "gpt-4o-mini"
 SEED       = 42
 
@@ -65,7 +92,7 @@ def group_paths(group: str) -> dict[str, Path]:
         "outputs":    base / "batches" / "outputs",
         "parsed":     base / "parsed",
         "results":    base / "results",
-        "batch_ids":  base / "batches" / f"batch_ids_{MODEL}.jsonl",
+        "batch_ids":  base / "batches" / f"classify_batch_job_ids_{MODEL}.jsonl",
         "voted_csv":  base / "results" / "classify_voted.csv",
         "group_json": base / "group.json",
     }

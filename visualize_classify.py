@@ -51,27 +51,31 @@ def plot_classification_grid(
 
     fig, ax = plt.subplots(figsize=(10, 7))
 
-    # --- rho = 0.5 contour ---
-    i_vals = np.arange(1, i0_max)
-    r_vals = np.linspace(0.001, r_max, 600)
+    # --- rho contour lines ---
+    i_vals = np.arange(0, i0_max + 2)
+    r_vals = np.linspace(0.001, r_max + 0.5, 600)
     I, R = np.meshgrid(i_vals, r_vals)
     rho = _rho_matrix(N, i_vals, r_vals)
-    cs = ax.contour(I, R, rho, levels=[0.5], colors="blue", linewidths=1.5)
 
-    for path in cs.get_paths():
-        verts = path.vertices
-        if len(verts) == 0:
-            continue
-        idx = int(np.argmax(verts[:, 0]))
-        x_label, y_label = verts[idx]
-        ax.text(x_label + 0.3, y_label, r"$\rho = 0.5$",
-                color="blue", fontsize=10, va="center", ha="left", rotation=0)
+    contour_levels = {0.5: "blue"}
+    for level, color in contour_levels.items():
+        cs = ax.contour(I, R, rho, levels=[level], colors=color, linewidths=1.5)
+        for path in cs.get_paths():
+            verts = path.vertices
+            if len(verts) == 0:
+                continue
+            x_target = i0_max - 2
+            dists = np.abs(verts[:, 0] - x_target)
+            idx = int(np.argmin(dists))
+            x_label, y_label = verts[idx]
+            ax.text(x_label, y_label - 0.05, rf"$\rho = {level}$",
+                    color=color, fontsize=10, va="top", ha="center", rotation=0)
 
     # --- X / O symbols ---
     for entry in rows:
         color = "red" if entry["label"] == "X" else "black"
         ax.text(entry["i0"], entry["r"], entry["label"],
-                ha="center", va="center", fontsize=14, fontweight="bold", color=color)
+                ha="center", va="center", fontsize=5, fontweight="bold", color=color)
 
     ax.set_xlim(-0.5, i0_max + 0.5)
     ax.set_ylim(0, r_max)
@@ -81,8 +85,7 @@ def plot_classification_grid(
     label_source = "true label" if use_true_label else "GPT majority vote"
     ax.set_title(
         f"Fixation probability classification ({label_source})\n"
-        r"$\mathbf{X}$ = $\rho > 0.5$  (red),  $\mathbf{O}$ = $\rho < 0.5$  (black),  "
-        "blue line = $\\rho = 0.5$",
+        r"$\mathbf{X}$ = $\rho > 0.5$  (red),  $\mathbf{O}$ = $\rho < 0.5$  (black)",
         fontsize=12,
     )
     ax.xaxis.set_major_locator(ticker.MaxNLocator(integer=True))
