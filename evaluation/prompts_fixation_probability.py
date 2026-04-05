@@ -18,20 +18,29 @@ ALLOWED_COLUMNS = [
 
 def build_system_prompt() -> str:
     return (
-        "You are given a single replicate event history from a Moran birth-death process. "
-        "In this process, at each step one individual is chosen to reproduce (proportional to fitness) "
-        "and one individual is chosen to die (uniformly at random). "
-        "Mutants (type A) may have a different fitness than non-mutants (type B). "
-        "The process runs until one type fixes (takes over the entire population). "
-        "Your task is to estimate rho: the probability that the mutant type ultimately fixes "
-        "in the population, based solely on the observable trace. "
-        "rho reflects how advantaged or disadvantaged the mutants are — "
-        "a value close to 1 means mutants almost certainly fix, close to 0 means they almost certainly die out. "
-        "consider how often mutants are chosen for birth relative to their population share, "
-        "how the mutant count evolves over time, and whether mutants seem to have a fitness advantage. "
-        "Return valid JSON with exactly one key: rho_estimated (a float between 0 and 1, to 2 decimal places). "
+        "You are given a partial event history from a Moran birth-death process. "
+        "At each step, one individual reproduces proportional to fitness and one dies uniformly at random. "
+        "Mutants (type A) have relative fitness r versus non-mutants (type B) which have fitness 1. "
+        "r may be above, equal to, or below 1 with equal prior probability — do not assume any direction. "
+        "The trace has been truncated and does not show the final outcome. "
+        "Your task is to decide whether the fixation probability rho of the mutant type is above or below 0.5. "
+        "To do this, examine the birth events in the trace: "
+        "At each step, compute whether the observed birth type matches what would be expected "
+        "under neutrality given the current mutant fraction. "
+        "Steps where the same individual is chosen for both birth and death carry no information — ignore these null events. "
+        "Integrate this evidence across all non-null steps to form a judgment. "
+        "Both outcomes are equally plausible a priori. "
+        "A single trace is noisy — base your decision on the overall pattern, not any single event. "
+        "Return valid JSON with exactly one key: label (either the string X if rho > 0.5, or O if rho < 0.5). "
         "Do not output any other text outside the JSON."
     )
+
+
+def _truncate_rows(rows: list[dict], fraction: float = 0.20) -> list[dict]:
+    """Remove the last `fraction` of rows to hide the absorption outcome."""
+    n = len(rows)
+    keep = max(1, n - int(n * fraction))
+    return rows[:keep]
 
 
 def _observable_csv_text(csv_path: Path) -> str:
@@ -42,6 +51,8 @@ def _observable_csv_text(csv_path: Path) -> str:
     for forbidden in ("true_i0", "true_r", "true_N", "meta_json"):
         if forbidden in (reader.fieldnames or []):
             raise ValueError(f"Forbidden ground-truth column found in trace CSV: {forbidden}")
+
+    rows = _truncate_rows(rows, fraction=0.20)
 
     present_columns = [c for c in ALLOWED_COLUMNS if c in (reader.fieldnames or [])]
     output_lines = [",".join(present_columns)]
@@ -54,7 +65,7 @@ def build_user_prompt_from_csv(csv_path: str | Path) -> str:
     csv_path = Path(csv_path)
     return (
         f"Trace file: {csv_path.name}\n"
-        "Below is the observable Moran-process event history in CSV format. "
-        "Estimate the fixation probability rho of the mutant type from this trace.\n\n"
+        "Below is a partial Moran-process event history in CSV format. "
+        "Decide whether the fixation probability rho of the mutant type is above or below 0.5.\n\n"
         f"{_observable_csv_text(csv_path)}"
     )
