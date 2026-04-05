@@ -27,7 +27,6 @@ def build_system_prompt() -> str:
         "in the population, based solely on the observable trace. "
         "rho reflects how advantaged or disadvantaged the mutants are — "
         "a value close to 1 means mutants almost certainly fix, close to 0 means they almost certainly die out. "
-        "Do not use any formula. Instead, reason intuitively from the trace: "
         "consider how often mutants are chosen for birth relative to their population share, "
         "how the mutant count evolves over time, and whether mutants seem to have a fitness advantage. "
         "Return valid JSON with exactly one key: rho_estimated (a float between 0 and 1, to 2 decimal places). "

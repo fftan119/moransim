@@ -22,11 +22,11 @@ def _rho_matrix(N: int, i_vals: np.ndarray, r_vals: np.ndarray) -> np.ndarray:
 
 def plot_classification_grid(
     voted_csv: str | Path,
-    output_dir: str | Path = "data/results/plots",
-    i0_max: int = 20,
-    r_max: float = 2.0,
+    output_dir: str | Path,
     use_true_label: bool = False,
     N: int = 20,
+    i0_max: int | None = None,
+    r_max: float | None = None,
 ) -> Path:
     voted_csv = Path(voted_csv)
     output_dir = Path(output_dir)
@@ -49,43 +49,46 @@ def plot_classification_grid(
     if not rows:
         raise ValueError(f"No valid rows found in {voted_csv}")
 
+    all_i0 = [e["i0"] for e in rows]
+    all_r  = [e["r"]  for e in rows]
+    _i0_max = i0_max if i0_max is not None else max(N - 1, max(all_i0))
+    _r_max  = r_max  if r_max  is not None else round(max(all_r) + 0.25, 2)
+
     fig, ax = plt.subplots(figsize=(10, 7))
 
-    # --- rho contour lines ---
-    i_vals = np.arange(0, i0_max + 2)
-    r_vals = np.linspace(0.001, r_max + 0.5, 600)
+    # --- rho = 0.5 contour — computed well beyond axis bounds so line reaches edges ---
+    i_vals = np.linspace(-1, _i0_max + 2, 600)
+    r_vals = np.linspace(0.001, _r_max + 1.0, 600)
     I, R = np.meshgrid(i_vals, r_vals)
     rho = _rho_matrix(N, i_vals, r_vals)
 
-    contour_levels = {0.5: "blue"}
-    for level, color in contour_levels.items():
-        cs = ax.contour(I, R, rho, levels=[level], colors=color, linewidths=1.5)
-        for path in cs.get_paths():
-            verts = path.vertices
-            if len(verts) == 0:
-                continue
-            x_target = i0_max - 2
-            dists = np.abs(verts[:, 0] - x_target)
-            idx = int(np.argmin(dists))
-            x_label, y_label = verts[idx]
-            ax.text(x_label, y_label - 0.05, rf"$\rho = {level}$",
-                    color=color, fontsize=10, va="top", ha="center", rotation=0)
+    cs = ax.contour(I, R, rho, levels=[0.5], colors="blue", linewidths=1.5)
+
+    # Place label in top-right corner of the plot, out of the way
+    ax.text(
+        _i0_max - 0.3, 0.1,
+        r"$\rho = 0.5$",
+        color="blue", fontsize=10,
+        va="top", ha="right",
+        bbox=dict(boxstyle="round,pad=0.2", fc="white", ec="blue", alpha=0.7),
+    )
 
     # --- X / O symbols ---
     for entry in rows:
         color = "red" if entry["label"] == "X" else "black"
         ax.text(entry["i0"], entry["r"], entry["label"],
-                ha="center", va="center", fontsize=5, fontweight="bold", color=color)
+                ha="center", va="center", fontsize=8, fontweight="bold", color=color)
 
-    ax.set_xlim(-0.5, i0_max + 0.5)
-    ax.set_ylim(0, r_max)
+    ax.set_xlim(-0.5, _i0_max + 0.5)
+    ax.set_ylim(0, _r_max)
     ax.invert_yaxis()
     ax.set_xlabel("Initial mutants  $i_0$", fontsize=13)
     ax.set_ylabel("Relative fitness  $r$", fontsize=13)
     label_source = "true label" if use_true_label else "GPT majority vote"
     ax.set_title(
-        f"Fixation probability classification ({label_source})\n"
-        r"$\mathbf{X}$ = $\rho > 0.5$  (red),  $\mathbf{O}$ = $\rho < 0.5$  (black)",
+        f"Fixation probability classification ({label_source})  [N={N}]\n"
+        r"$\mathbf{X}$ = $\rho > 0.5$  (red),  $\mathbf{O}$ = $\rho < 0.5$  (black),  "
+        "blue line = $\\rho = 0.5$",
         fontsize=12,
     )
     ax.xaxis.set_major_locator(ticker.MaxNLocator(integer=True))
@@ -96,18 +99,18 @@ def plot_classification_grid(
     out_path = output_dir / "classification_grid.png"
     fig.savefig(out_path, dpi=200)
     plt.close(fig)
-    print(f"Saved: {out_path}  ({len(rows)} points plotted)")
+    print(f"Saved: {out_path}  ({len(rows)} points plotted, N={N})")
     return out_path
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Plot X/O classification grid.")
-    parser.add_argument("--group", default=None, help="Group name to visualize (e.g. boundary_sweep_N20)")
-    parser.add_argument("--voted-csv", default=None, help="Direct path to classify_voted.csv (overrides --group)")
+    parser.add_argument("--group", default=None)
+    parser.add_argument("--voted-csv", default=None)
     parser.add_argument("--output-dir", default=None)
-    parser.add_argument("--i0-max", type=int, default=20)
-    parser.add_argument("--r-max", type=float, default=2.0)
     parser.add_argument("--N", type=int, default=20)
+    parser.add_argument("--i0-max", type=int, default=None)
+    parser.add_argument("--r-max", type=float, default=None)
     parser.add_argument("--true-label", action="store_true")
     args = parser.parse_args()
 
@@ -123,10 +126,10 @@ def main() -> None:
     plot_classification_grid(
         voted_csv=voted_csv,
         output_dir=output_dir,
-        i0_max=args.i0_max,
-        r_max=args.r_max,
         use_true_label=args.true_label,
         N=args.N,
+        i0_max=args.i0_max,
+        r_max=args.r_max,
     )
 
 
