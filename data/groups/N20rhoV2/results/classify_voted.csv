@@ -1,0 +1,7 @@
+exp_id,true_r,true_i0,true_N,rho_true,true_label,majority_vote,correct,x_count,o_count,n_replicates,per_replicate_labels
+exp001,1.1398,8,20,0.700066,X,X,1,16,4,20,"X,X,X,X,X,X,X,X,X,X,O,X,X,X,O,X,O,X,X,O"
+exp001,1.1126,9,20,0.700085,X,X,1,17,3,20,"X,X,X,X,X,O,X,X,O,X,O,X,X,X,X,X,X,X,X,X"
+exp001,1.1398,8,20,0.700066,X,X,1,16,4,20,"X,X,X,X,X,X,X,X,X,X,O,X,X,X,O,X,O,X,X,O"
+exp001,1.1126,9,20,0.700085,X,X,1,17,3,20,"X,X,X,X,X,O,X,X,O,X,O,X,X,X,X,X,X,X,X,X"
+exp001,0.9574,8,20,0.300041,O,O,1,9,11,20,"X,O,O,X,O,O,X,O,X,X,O,X,X,O,O,X,O,O,X,O"
+exp001,0.938,9,20,0.299956,O,O,1,9,11,20,"X,O,X,O,O,X,X,X,O,O,X,X,O,O,O,O,O,X,O,X"

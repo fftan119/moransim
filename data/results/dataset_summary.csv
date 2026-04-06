@@ -1,0 +1,21 @@
+run_id,trace_csv,meta_json,true_r,true_N,true_i0,num_events_full
+exp001_run01,C:\Users\Frank Tan\moransim\data\raw\exp001_run01.csv,C:\Users\Frank Tan\moransim\data\raw\exp001_run01.meta.json,1.75,15,13,92
+exp001_run02,C:\Users\Frank Tan\moransim\data\raw\exp001_run02.csv,C:\Users\Frank Tan\moransim\data\raw\exp001_run02.meta.json,1.75,15,13,103
+exp001_run03,C:\Users\Frank Tan\moransim\data\raw\exp001_run03.csv,C:\Users\Frank Tan\moransim\data\raw\exp001_run03.meta.json,1.75,15,13,4
+exp001_run04,C:\Users\Frank Tan\moransim\data\raw\exp001_run04.csv,C:\Users\Frank Tan\moransim\data\raw\exp001_run04.meta.json,1.75,15,13,33
+exp001_run05,C:\Users\Frank Tan\moransim\data\raw\exp001_run05.csv,C:\Users\Frank Tan\moransim\data\raw\exp001_run05.meta.json,1.75,15,13,37
+exp001_run06,C:\Users\Frank Tan\moransim\data\raw\exp001_run06.csv,C:\Users\Frank Tan\moransim\data\raw\exp001_run06.meta.json,1.75,15,13,23
+exp001_run07,C:\Users\Frank Tan\moransim\data\raw\exp001_run07.csv,C:\Users\Frank Tan\moransim\data\raw\exp001_run07.meta.json,1.75,15,13,2
+exp001_run08,C:\Users\Frank Tan\moransim\data\raw\exp001_run08.csv,C:\Users\Frank Tan\moransim\data\raw\exp001_run08.meta.json,1.75,15,13,18
+exp001_run09,C:\Users\Frank Tan\moransim\data\raw\exp001_run09.csv,C:\Users\Frank Tan\moransim\data\raw\exp001_run09.meta.json,1.75,15,13,6
+exp001_run10,C:\Users\Frank Tan\moransim\data\raw\exp001_run10.csv,C:\Users\Frank Tan\moransim\data\raw\exp001_run10.meta.json,1.75,15,13,75
+exp001_run11,C:\Users\Frank Tan\moransim\data\raw\exp001_run11.csv,C:\Users\Frank Tan\moransim\data\raw\exp001_run11.meta.json,1.75,15,13,174
+exp001_run12,C:\Users\Frank Tan\moransim\data\raw\exp001_run12.csv,C:\Users\Frank Tan\moransim\data\raw\exp001_run12.meta.json,1.75,15,13,19
+exp001_run13,C:\Users\Frank Tan\moransim\data\raw\exp001_run13.csv,C:\Users\Frank Tan\moransim\data\raw\exp001_run13.meta.json,1.75,15,13,10
+exp001_run14,C:\Users\Frank Tan\moransim\data\raw\exp001_run14.csv,C:\Users\Frank Tan\moransim\data\raw\exp001_run14.meta.json,1.75,15,13,19
+exp001_run15,C:\Users\Frank Tan\moransim\data\raw\exp001_run15.csv,C:\Users\Frank Tan\moransim\data\raw\exp001_run15.meta.json,1.75,15,13,52
+exp001_run16,C:\Users\Frank Tan\moransim\data\raw\exp001_run16.csv,C:\Users\Frank Tan\moransim\data\raw\exp001_run16.meta.json,1.75,15,13,3
+exp001_run17,C:\Users\Frank Tan\moransim\data\raw\exp001_run17.csv,C:\Users\Frank Tan\moransim\data\raw\exp001_run17.meta.json,1.75,15,13,18
+exp001_run18,C:\Users\Frank Tan\moransim\data\raw\exp001_run18.csv,C:\Users\Frank Tan\moransim\data\raw\exp001_run18.meta.json,1.75,15,13,81
+exp001_run19,C:\Users\Frank Tan\moransim\data\raw\exp001_run19.csv,C:\Users\Frank Tan\moransim\data\raw\exp001_run19.meta.json,1.75,15,13,47
+exp001_run20,C:\Users\Frank Tan\moransim\data\raw\exp001_run20.csv,C:\Users\Frank Tan\moransim\data\raw\exp001_run20.meta.json,1.75,15,13,97

@@ -25,7 +25,9 @@ import sys
 from pathlib import Path
 
 # ── Configure your grid here ─────────────────────────────────────────────────
-NUM = 7
+NUM = 13
+NUM2 = 9
+NUM3 = 11
 
 GRID = [
     # (r,    i0)
@@ -38,7 +40,7 @@ GRID = [
     (1.75,   NUM),
 ]
 
-N          = 20
+N          = 15
 REPLICATES = 20
 MODEL      = "gpt-4o-mini"
 SEED       = 42
