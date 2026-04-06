@@ -36,6 +36,9 @@ python visualize_classify.py --group N20rho --N 20 --true-label
 
 # To add more points to the same group, update GRID and re-run Step 1.
 
+# generate grid:
+python moran_grid.py --N 20 --delta 0.1 --r-threshold 2
+
 
 # ── Cleanup ───────────────────────────────────────────────────────────────────
 

@@ -42,7 +42,7 @@ def plot_classification_grid(
                 label = row[label_col].strip().upper()
             except (KeyError, ValueError):
                 continue
-            if label in ("X", "O"):
+            if label in ("X", "O", "T"):
                 seen[(r_val, i0_val)] = {"r": r_val, "i0": i0_val, "label": label}
 
     rows = list(seen.values())
@@ -56,28 +56,30 @@ def plot_classification_grid(
 
     fig, ax = plt.subplots(figsize=(10, 7))
 
-    # --- rho = 0.5 contour — computed well beyond axis bounds so line reaches edges ---
+    # --- rho = 0.5 contour ---
     i_vals = np.linspace(-1, _i0_max + 2, 600)
     r_vals = np.linspace(0.001, _r_max + 1.0, 600)
     I, R = np.meshgrid(i_vals, r_vals)
     rho = _rho_matrix(N, i_vals, r_vals)
-
-    cs = ax.contour(I, R, rho, levels=[0.5], colors="blue", linewidths=1.5)
-
-    # Place label in top-right corner of the plot, out of the way
+    ax.contour(I, R, rho, levels=[0.5], colors="blue", linewidths=1.5)
     ax.text(
-        _i0_max - 0.3, 0.1,
-        r"$\rho = 0.5$",
-        color="blue", fontsize=10,
-        va="top", ha="right",
+        _i0_max - 0.3, 0.1, r"$\rho = 0.5$",
+        color="blue", fontsize=10, va="top", ha="right",
         bbox=dict(boxstyle="round,pad=0.2", fc="white", ec="blue", alpha=0.7),
     )
 
-    # --- X / O symbols ---
+    # --- X / O / T symbols ---
     for entry in rows:
-        color = "red" if entry["label"] == "X" else "black"
-        ax.text(entry["i0"], entry["r"], entry["label"],
-                ha="center", va="center", fontsize=8, fontweight="bold", color=color)
+        label = entry["label"]
+        if label == "X":
+            ax.text(entry["i0"], entry["r"], "X",
+                    ha="center", va="center", fontsize=8, fontweight="bold", color="red")
+        elif label == "O":
+            ax.text(entry["i0"], entry["r"], "O",
+                    ha="center", va="center", fontsize=8, fontweight="bold", color="black")
+        elif label == "T":
+            ax.plot(entry["i0"], entry["r"], marker="^", markersize=8,
+                    color="grey", linestyle="None")
 
     ax.set_xlim(-0.5, _i0_max + 0.5)
     ax.set_ylim(0, _r_max)
@@ -88,7 +90,7 @@ def plot_classification_grid(
     ax.set_title(
         f"Fixation probability classification ({label_source})  [N={N}]\n"
         r"$\mathbf{X}$ = $\rho > 0.5$  (red),  $\mathbf{O}$ = $\rho < 0.5$  (black),  "
-        "blue line = $\\rho = 0.5$",
+        r"$\mathbf{△}$ = tie (grey)",
         fontsize=12,
     )
     ax.xaxis.set_major_locator(ticker.MaxNLocator(integer=True))

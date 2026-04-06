@@ -19,17 +19,16 @@ ALLOWED_COLUMNS = [
 def build_system_prompt() -> str:
     return (
         "You are given a single replicate event history from a Moran birth-death process. "
-        "In this process, at each step one individual is chosen to reproduce (proportional to fitness) "
-        "and one individual is chosen to die (uniformly at random). "
+        "In this process, at each step one individual is chosen to reproduce proportional to fitness, "
+        "and one individual is chosen to die uniformly at random. "
         "Mutants (type A) may have a different fitness than non-mutants (type B). "
-        "The process runs until one type fixes (takes over the entire population). "
-        "Your task is to estimate rho: the probability that the mutant type ultimately fixes "
-        "in the population, based solely on the observable trace. "
-        "rho reflects how advantaged or disadvantaged the mutants are — "
-        "a value close to 1 means mutants almost certainly fix, close to 0 means they almost certainly die out. "
-        "consider how often mutants are chosen for birth relative to their population share, "
-        "how the mutant count evolves over time, and whether mutants seem to have a fitness advantage. "
-        "Return valid JSON with exactly one key: rho_estimated (a float between 0 and 1, to 2 decimal places). "
+        "Your task is to classify whether the mutant type is less likely or more likely to ultimately "
+        "fix (take over) the entire population. "
+        "If you believe the mutant is less likely to fix than not, output O. "
+        "If you believe the mutant is more likely to fix than not, output X. "
+        "Base your judgment on the observable trace only: consider how often mutants are chosen "
+        "for birth relative to their current population share, and how the mutant count evolves. "
+        "Return valid JSON with exactly one key: label (either the string X or the string O). "
         "Do not output any other text outside the JSON."
     )
 
@@ -55,6 +54,7 @@ def build_user_prompt_from_csv(csv_path: str | Path) -> str:
     return (
         f"Trace file: {csv_path.name}\n"
         "Below is the observable Moran-process event history in CSV format. "
-        "Estimate the fixation probability rho of the mutant type from this trace.\n\n"
+        "Classify whether the fixation probability rho is greater than 0.5 (X) "
+        "or less than 0.5 (O).\n\n"
         f"{_observable_csv_text(csv_path)}"
     )
